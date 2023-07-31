@@ -1,0 +1,14 @@
+[default]
+APPNAME = "FOOTPRINT_PLANEJAMENTO_ESTRATEGICO"
+LOGO_APP = "assets/itau.png"
+STYLES_CSS = 'styles/style.css'
+
+# CREDENTIALS
+AUTHENTICATION_CREDENTIALS = "credentials/credentials.xlsx"
+AUTHENTICATION_CONFIG = "credentials/credentials.yaml"
+AUTHENTICATION_CREDENTIALS_INDEX = "username"
+VALIDATOR_RENAME_CREDENTIALS = true
+AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME = {"USUARIO"="username", "EMAIL"="email", "NOME"="name", "TOKEN"="password", "GROUPO_ACESSO"="GRUPO_ACESSO"}
+
+[development]
+DATA_DIR_AGENCIAS = "data/BASE_COM_CEP.xlsx"
