@@ -3,6 +3,7 @@ from pathlib import Path
 
 import streamlit as st
 from dynaconf import settings
+from loguru import logger
 
 from utils.streamlit_functions import add_logo
 
@@ -20,6 +21,8 @@ def main(authenticator, username):
         # OBTENDO AS INFOS DO USUÁRIO LOGADO
         infos_username_log = st.session_state["users"]["usernames"][username]
 
+        logger.info("USUÁRIO LOGADO: {}".format(infos_username_log))
+
         # ADICIONANDO TITULO DA PÁGINA
         st.title("APP - FOOTPRINT - GESTÃO DO PARQUE DE AGÊNCIAS")
 
@@ -34,4 +37,7 @@ def main(authenticator, username):
             st.markdown("Bem vindo: {}".format(infos_username_log["name"]))
 
             authenticator.logout('Sair', 'main', key='unique_key')
+
+        # NO MAIN
+
 

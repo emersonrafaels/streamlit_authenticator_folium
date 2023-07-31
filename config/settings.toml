@@ -10,5 +10,9 @@ AUTHENTICATION_CREDENTIALS_INDEX = "username"
 VALIDATOR_RENAME_CREDENTIALS = true
 AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME = {"USUARIO"="username", "EMAIL"="email", "NOME"="name", "TOKEN"="password", "GROUPO_ACESSO"="GRUPO_ACESSO"}
 
+# MAPA
+MAP_ICON_DEFALT = "assets/itau.png"
+MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelha.png", "AMARELA"="assets/itau_amarela.png", "VERDE"="assets/itau_verde.png"}
+
 [development]
 DATA_DIR_AGENCIAS = "data/BASE_COM_CEP.xlsx"
