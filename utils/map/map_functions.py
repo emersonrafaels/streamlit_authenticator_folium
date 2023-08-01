@@ -7,6 +7,7 @@ import branca
 import pandas as pd
 import folium
 import streamlit as st
+from folium.plugins import MarkerCluster
 from dynaconf import settings
 from loguru import logger
 
@@ -211,6 +212,8 @@ def load_map(
     save_figure=True,
     map_save_name="PLOT_MAP.html",
     dict_icons=None,
+    validator_marker_cluster=False,
+    column_marker_cluster=None,
     column_latitude="LATITUDE",
     column_longitude="LONGITUDE",
     name_column_tooltip="AGENCIA",
@@ -253,6 +256,19 @@ def load_map(
                     "ATUALIZANDO O MAPA - SOMBREAMENTO - {} m".format(circle_radius)
                 )
 
+            if validator_marker_cluster:
+                # CRIANDO O CLUSTER
+                marker_cluster = MarkerCluster(name="CLUSTER",
+                                               overlay=True,
+                                               icon_create_function=None)
+
+                # OS MARCADORES SÃO ADICIONADOS AO CLUSTER
+                obj_marker = marker_cluster
+
+            else:
+                # OS MARCADORES SÃO ADICIONADOS AO MAPA
+                obj_marker = mapobj
+
             # PERCORRENDO O DATAFRAME
             for idx, row in data.iterrows():
                 # OBTENDO O STATUS
@@ -288,7 +304,7 @@ def load_map(
                             data=row, name_column_tooltip=name_column_tooltip, sep=" - "
                         ),
                         lazy=True,
-                    ).add_to(mapobj)
+                    ).add_to(obj_marker)
 
                     # VALIDANDO SE É DESEJADO ADICIONAR CIRCLEMARKER
                     if circle_radius > 0:
@@ -301,13 +317,18 @@ def load_map(
                             tooltip="{}{}".format(
                                 name_tooltip_sombreamento, row[name_column_header]
                             ),
-                        ).add_to(mapobj)
+                        ).add_to(obj_marker)
+
+        if validator_marker_cluster:
+            # ADICIONANDO O CLUSTER AO MAPA
+            obj_marker.add_to(mapobj)
 
         return mapobj
 
     # CRIANDO O MAPA
     footprint_map = folium.Map(
-        location=[-15.768857589354258, -47.905384728712384],
+        location=[data[column_latitude].mean(),
+                  data[column_longitude].mean()],
         zoom_start=4,
         tiles=map_layer_default,
     )

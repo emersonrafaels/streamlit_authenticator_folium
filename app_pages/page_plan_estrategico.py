@@ -40,6 +40,8 @@ def load_page_plan_estrategico():
         save_figure=settings.get("MAP_SAVE_FIGURE", True),
         map_save_name=settings.get("MAP_SAVE_NAME", "PLOT_MAP.html"),
         dict_icons=None,
+        validator_marker_cluster=settings.get("VALIDATOR_MARKER_CLUSTER", True),
+        column_marker_cluster=settings.get("COLUMN_MARKER_CLUSTER", "MERCADO"),
         column_latitude=settings.get("COLUMN_LATITUDE", "LATITUDE"),
         column_longitude=settings.get("COLUMN_LONGITUDE", "LONGITUDE"),
         name_column_tooltip=settings.get("MAP_COLUMN_TOOLTIP", "CÓDIGO AG"),
