@@ -262,7 +262,9 @@ def load_map(
                 lat = row.get(column_latitude)
                 long = row.get(column_longitude)
 
-                if isinstance(lat, numbers.Number) and isinstance(long, numbers.Number):
+                if (isinstance(lat, numbers.Number) and not pd.isna(lat)) and (
+                    isinstance(long, numbers.Number) and not pd.isna(long)
+                ):
                     # OBTENDO O HTML DO ICON
                     html = convert_df_html(
                         row_df=row,

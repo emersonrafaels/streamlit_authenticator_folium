@@ -12,7 +12,7 @@ AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME = {"USUARIO"="username", "EMAIL"="e
 
 # MAPA
 MAP_ICON_DEFALT = "assets/itau.png"
-MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelha.png", "AMARELA"="assets/itau_amarela.png", "VERDE"="assets/itau_verde.png"}
+MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelho.png", "AMARELA"="assets/itau_amarelo.png", "VERDE"="assets/itau_verde.png"}
 
 [development]
 DATA_DIR_AGENCIAS = "data/footprint_agencias.xlsx"
