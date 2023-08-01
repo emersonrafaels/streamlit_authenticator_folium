@@ -31,11 +31,11 @@ def load_page_plan_estrategico():
     selected_df = pd.DataFrame(dataframe_aggrid["selected_rows"])
 
     # PLOTANDO O MAPA
-    validator, map = load_map(
+    validator, mapobj = load_map(
         data=df_planejamento,
         map_layer_default="openstreetmap",
         circle_radius=0,
-        validator_add_layer=False,
+        validator_add_layer=settings.get("VALIDATOR_ADD_LAYER", False),
         column_status=settings.get("COLUMN_STATUS", "STATUS"),
         save_figure=settings.get("MAP_SAVE_FIGURE", True),
         map_save_name=settings.get("MAP_SAVE_NAME", "PLOT_MAP.html"),
@@ -45,6 +45,9 @@ def load_page_plan_estrategico():
         name_column_tooltip=settings.get("MAP_COLUMN_TOOLTIP", "CÓDIGO AG"),
         name_column_header=settings.get("MAP_COLUMN_HEADER", "ENDEREÇO"),
     )
+
+    # INCLUINDO O MAPA NO APP
+    st_data = st_folium(mapobj, width=1000, height=500)
 
 
 if __name__ == "__main__":

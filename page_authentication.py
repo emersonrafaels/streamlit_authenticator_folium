@@ -64,7 +64,7 @@ def main_authenticator():
 
     # VERIFICANDO O LOGIN
     if authentication_status:
-        logger.info(
+        logger.debug(
             "LOGIN REALIZADO POR: NOME: {} - USERNAME: {}".format(name, username)
         )
 

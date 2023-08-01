@@ -21,7 +21,7 @@ def main(authenticator, username):
         # OBTENDO AS INFOS DO USUÁRIO LOGADO
         infos_username_log = st.session_state["users"]["usernames"][username]
 
-        logger.info("USUÁRIO LOGADO: {}".format(infos_username_log))
+        logger.debug("USUÁRIO LOGADO: {}".format(infos_username_log))
 
         # ADICIONANDO TITULO DA PÁGINA
         # st.title("APP - PLANEJAMENTO ESTRATÉGICO")
