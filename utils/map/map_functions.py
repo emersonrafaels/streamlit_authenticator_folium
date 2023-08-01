@@ -260,7 +260,7 @@ def load_map(
                 # CRIANDO O CLUSTER
                 marker_cluster = MarkerCluster(name="CLUSTER",
                                                overlay=True,
-                                               icon_create_function=None)
+                                               control=True)
 
                 # OS MARCADORES SÃO ADICIONADOS AO CLUSTER
                 obj_marker = marker_cluster

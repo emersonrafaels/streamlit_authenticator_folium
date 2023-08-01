@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from dynaconf import settings
 from streamlit_folium import st_folium
+from loguru import logger
 
 from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
 from utils.map.map_functions import load_map
@@ -11,11 +12,53 @@ from utils.map.map_functions import load_map
 dir_root = Path(__file__).absolute().parent.parent
 
 
+def __save_action__(data, ag_selected, action_selected):
+
+    # OBTENDO A COLUNA PARA SALVAR AS AÇÕES
+    col_save_action = settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
+
+    # VERIFICANDO SE A COLUNA EXISTE, CASO NÃO EXISTA
+    # CRIA COLUNA PARA SALVAR A ESTRATÉGIA SELECIONADA
+    if not col_save_action in data:
+        data[col_save_action] = ""
+
+    logger.info(
+        "SALVANDO AÇÃO: AGÊNCIA: {} - ESTRATÉGIA: {}".format(ag_selected,
+                                                             action_selected))
+
+    # SALVANDO A ESTRATÉGIA PARA A AGÊNCIA
+    data.loc[data[settings.get("COLUMN_NUM_AGENCIA",  "CÓDIGO AG")] == ag_selected,
+             col_save_action] = action_selected
+
+    # SALVANDO NO OBJETO GLOBAL
+    st.session_state["df_planejamento"] = data
+
+def __save_excel__(data):
+
+    dir_save = str(Path(dir_root,
+                    settings.get("DIR_SAVE_RESULT",
+                                 "resultados/RESULTADO_ESTRATEGICO")))
+
+    # SALVANDO OS DADOS
+    data.to_excel(dir_save, index=False)
+
+    logger.info("DADOS SALVOS COM SUCESSO EM: {}".format(dir_save))
+
 def load_page_plan_estrategico():
-    # CARREGANDO DATAFRAME
-    df_planejamento = load_data(
-        data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
-    )
+
+    if "df_planejamento" not in st.session_state.keys():
+        # CARREGANDO DATAFRAME
+        df_planejamento = load_data(
+            data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
+        )
+
+        logger.info("DADOS OBTIDOS COM SUCESSO")
+
+        st.session_state["df_planejamento"] = df_planejamento
+
+    else:
+        logger.info("DADOS RECUPERADOS DO SESSION STATE COM SUCESSO")
+        df_planejamento = st.session_state["df_planejamento"]
 
     # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
@@ -30,10 +73,17 @@ def load_page_plan_estrategico():
     # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
     selected_df = pd.DataFrame(dataframe_aggrid["selected_rows"])
 
+    if not selected_df.empty:
+        df_map = selected_df
+    else:
+        df_map = df_planejamento
+
+    logger.warning("LEN: {}".format(len(df_map)))
+
     # PLOTANDO O MAPA
     validator, mapobj = load_map(
-        data=df_planejamento,
-        map_layer_default="openstreetmap",
+        data=df_map,
+        map_layer_default=settings.get("MAP_LAYER_DEFAULT", "openstreetmap"),
         circle_radius=0,
         validator_add_layer=settings.get("VALIDATOR_ADD_LAYER", False),
         column_status=settings.get("COLUMN_STATUS", "STATUS"),
@@ -53,7 +103,7 @@ def load_page_plan_estrategico():
 
     # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
     with st.container():
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             ag_selected = st.selectbox(label="Agência",
                                        options=df_planejamento[settings.get("COLUMN_NUM_AGENCIA",
@@ -65,7 +115,31 @@ def load_page_plan_estrategico():
                                                             ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]),
                                        help="Selecione a estratégia desejada para a agência")
 
+        with col3:
+            st.markdown("")
+            st.markdown("")
+            bt_action = st.button(label="Aplicar estratégia",
+                                                           help="Ao clicar no botão, os dados serão salvos na atualizados",
+                                  on_click=__save_action__, args=(df_planejamento,
+                                                                  ag_selected,
+                                                                  ag_action))
 
+    # SALVAR RESULTADOS
+    with st.container():
+        col1_save, col2_save = st.columns(2)
+        with col1_save:
+            # st.download_button(
+            #     label="Download mapa",
+            #     data=mapobj,
+            #     file_name="FOOTPRINT.html",
+            #     mime="text/html",
+            # )
+            pass
+
+        with col2_save:
+            st.button(label="Salvar estratégia",
+                      help="Ao clicar no botão, os dados serão salvos na planilha auxiliar",
+                      on_click=__save_excel__, args=(df_planejamento,))
 
 if __name__ == "__main__":
     load_page_plan_estrategico()

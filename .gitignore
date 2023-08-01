@@ -2,3 +2,5 @@ __pycache__/
 .idea/
 data/~$f*
 PLOT_MAP.html
+resultados/
+MarkerCluster.ipynb
