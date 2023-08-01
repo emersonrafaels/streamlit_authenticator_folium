@@ -38,40 +38,48 @@ def get_credentials():
 
 
 def main_authenticator():
+
     # OBTENDO AS CREDENCIAIS
+    logger.info("OBTENDO AS CREDENCIAIS")
+
     authenticator = get_credentials()
 
-    st.session_state["users"] = authenticator.credentials
+    if not st.session_state.get("authentication_status"):
 
-    # OBTENDO O DIRETÓRIO DO LOGO
-    dir_logo = str(Path(Path(__file__).absolute().parent, settings.LOGO_APP))
-    # CODIFICANDO A IMAGEM EM BASE64
-    dir_logo = base64.b64encode(open(dir_logo, "rb").read())
+        logger.info("CRIANDO TELA DE LOGIN")
 
-    # CRIANDO O WIDGET
-    name, authentication_status, username = authenticator.login(
-        form_name="Footprint - Autosserviços",
-        location="main",
-        form_name_username="Usuário",
-        form_name_password="Senha",
-        form_name_button="Entrar",
-        validator_insert_image=True,
-        image=dir_logo,
-        width_image=100,
-        location_image="main",
-        position_image="center",
-    )
+        st.session_state["users"] = authenticator.credentials
+
+        # OBTENDO O DIRETÓRIO DO LOGO
+        dir_logo = str(Path(Path(__file__).absolute().parent, settings.LOGO_APP))
+        # CODIFICANDO A IMAGEM EM BASE64
+        dir_logo = base64.b64encode(open(dir_logo, "rb").read())
+
+        # CRIANDO O WIDGET
+        name, authentication_status, username = authenticator.login(
+            form_name="Footprint - Autosserviços",
+            location="main",
+            form_name_username="Usuário",
+            form_name_password="Senha",
+            form_name_button="Entrar",
+            validator_insert_image=True,
+            image=dir_logo,
+            width_image=100,
+            location_image="main",
+            position_image="center",
+        )
 
     # VERIFICANDO O LOGIN
-    if authentication_status:
+    if st.session_state.get("authentication_status"):
         logger.debug(
-            "LOGIN REALIZADO POR: NOME: {} - USERNAME: {}".format(name, username)
+            "LOGIN REALIZADO POR: NOME: {} - USERNAME: {}".format(st.session_state["name"],
+                                                                  st.session_state["username"])
         )
 
         # st.success("Login realizado com sucesso")
         # sleep(2)
-        main_app(authenticator, username)
-    elif username in [None, ""] and authentication_status is False:
+        main_app(authenticator, st.session_state["username"])
+    elif st.session_state["username"] in [None, ""] and authentication_status is False:
         st.warning("Por favor, inserir usuário e senha")
     elif authentication_status is False:
         st.error("Usuário ou senha estão incorretos")

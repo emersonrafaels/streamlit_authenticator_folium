@@ -9,7 +9,7 @@ def read_credentials_excel(dir_credential_excel, col_index=None):
     # INICIANDO A VARIÁVEL QUE ARMAZENARÁ AS CREDENCIAIS
     credentials_usernames = {"usernames": ""}
 
-    logger.info("INICIANDO A LEITURA DAS CREDENTIAIS")
+    logger.info("INICIANDO A LEITURA DAS CREDENCIAIS")
 
     # REALIZANDO A LEITURA DO EXCEL
     if os.path.exists(dir_credential_excel):
