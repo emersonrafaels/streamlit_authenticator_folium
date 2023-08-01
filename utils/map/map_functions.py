@@ -1,5 +1,7 @@
 import numbers
 from os import path
+from pathlib import Path
+from inspect import stack
 
 import branca
 import pandas as pd
@@ -9,6 +11,9 @@ from dynaconf import settings
 from loguru import logger
 
 from utils.generic_functions import calculate_time_usage
+
+
+dir_root = Path(__file__).absolute().parent.parent.parent
 
 
 def convert_df_html(
@@ -89,8 +94,8 @@ def convert_df_html(
 
     return html
 
-def get_icon(dict_icons=None, status=None):
 
+def get_icon(dict_icons=None, status=None):
     """
 
     FUNÇÃO PARA OBTER O ICON QUE SERÁ MARCADO NO MAPA
@@ -110,87 +115,107 @@ def get_icon(dict_icons=None, status=None):
 
     """
 
-    # INICIALIZANDO O ICON DEFAULT
-    icon_default = settings.get("MAP_ICON_DEFALT", "../assets/itau.logo")
+    try:
+        # INICIALIZANDO O ICON DEFAULT
+        icon_default = str(
+            Path(dir_root, settings.get("MAP_ICON_DEFALT", "assets/itau.logo"))
+        )
 
-    # VERIFICANDO SE O ICON DEFAULT EXISTE
-    if not path.exists(icon_default):
-        icon_default = "ok-sign"
+        # VERIFICANDO SE O ICON DEFAULT EXISTE
+        if not path.exists(icon_default):
+            icon_default = "ok-sign"
 
-    if dict_icons:
-        # VERIFICANDO SE O STATUS CONSTA NO DICT DE ICONS
-        if str(status) in dict_icons() and path.exists(dict_icons.get(str(status))):
-            current_icon = folium.features.CustomIcon(icon_image=dict_icons.get(str(status),
-                                                                                icon_size=(16, 16)))
+        if dict_icons:
+            # VERIFICANDO SE O STATUS CONSTA NO DICT DE ICONS
+            if str(status) in dict_icons() and path.exists(dict_icons.get(str(status))):
+                current_icon = folium.features.CustomIcon(
+                    icon_image=dict_icons.get(str(status), icon_size=(16, 16))
+                )
 
-            return current_icon
+                return current_icon
 
-    if str(status).upper() in settings.get("DICT_ICONS_DEFAULT"):
+        if str(status).upper() in settings.get("MAP_DICT_ICON_DEFAULT", {}):
+            current_icon = folium.features.CustomIcon(
+                icon_image=str(
+                    Path(
+                        dir_root, settings.get("MAP_DICT_ICON_DEFAULT").get(str(status))
+                    )
+                ),
+                icon_size=(16, 16),
+            )
+
+        else:
+            current_icon = folium.features.CustomIcon(
+                icon_image=icon_default, icon_size=(16, 16)
+            )
+
+    except Exception as ex:
+        logger.error("ERRO NA FUNÇÃO: {} - {}".format(stack()[0][3], ex))
+
         current_icon = folium.features.CustomIcon(
-            icon_image=settings.get("DICT_ICONS_DEFAULT").get(str(status),
-                                      icon_size=(16, 16)))
-
-    else:
-        current_icon = folium.features.CustomIcon(
-            icon_image=icon_default, icon_size=(16, 16))
+            icon_image=icon_default, icon_size=(16, 16)
+        )
 
     return current_icon
 
+
 def get_name_tooltip(data, name_column_tooltip, sep=" - "):
-
     """
-        DEFINE O NOME QUE SERÁ APRESENTADO NO TOOLTIP.
+    DEFINE O NOME QUE SERÁ APRESENTADO NO TOOLTIP.
 
-        CASO:
-            1. name_column_tooltip seja string, é esperado que
-               seja apenas uma coluna do Dataframe)
+    CASO:
+        1. name_column_tooltip seja string, é esperado que
+           seja apenas uma coluna do Dataframe)
 
-            2. name_column_tooltip seja list ou tuple, é esperado que
-               seja apenas mais de uma coluna do Dataframe e portanto
-               será obtido uma junção dessas colunas, separados pelo char
-               definido pela variável 'sep'.
+        2. name_column_tooltip seja list ou tuple, é esperado que
+           seja apenas mais de uma coluna do Dataframe e portanto
+           será obtido uma junção dessas colunas, separados pelo char
+           definido pela variável 'sep'.
 
 
-        # Arguments
-            data                    - Required: Dataframe contendo os dados (DataFrame)
-            name_column_tooltip     - Required: Lista de colunas desejadas
-                                                para ser tooltip (String | List | Tuple)
-            sep                     - Required: Separador usado caso o
-                                                name_column_tooltip seja iterável (String)
+    # Arguments
+        data                    - Required: Dataframe contendo os dados (DataFrame)
+        name_column_tooltip     - Required: Lista de colunas desejadas
+                                            para ser tooltip (String | List | Tuple)
+        sep                     - Required: Separador usado caso o
+                                            name_column_tooltip seja iterável (String)
 
-        # Returns
-            value_tooltip           - Required: Tooltip obtido (String)
+    # Returns
+        value_tooltip           - Required: Tooltip obtido (String)
 
     """
 
     # VERIFICANDO SE O NOME DA COLUNA DESEJADA PARA SER TOOLTIP É STRING
     if isinstance(name_column_tooltip, str):
         # VERIFICANDO SE A COLUNA CONSTA NO DATAFRAME
-        if name_column_tooltip in data.columns:
+        if name_column_tooltip in data.keys():
             return data[name_column_tooltip]
 
     # VERIFICANDO SE O NOME DA COLUNA DESEJADA PARA SER TOOLTIP É ITERÁVEL
     elif isinstance(name_column_tooltip, (tuple, list)):
         # VERIFICANDO SE A COLUNA CONSTA NO DATAFRAME
-        if name_column_tooltip in data.columns:
-            return sep.join([str(value) for value in data.filter(items=name_column_tooltip)])
-        else:
-            return name_column_tooltip
+        return sep.join(
+            [str(value) for value in data.filter(items=name_column_tooltip)]
+        )
+    else:
+        return name_column_tooltip
+
 
 @calculate_time_usage
-def load_map(data=None,
-             map_layer_default="openstreetmap",
-             circle_radius=0,
-             validator_add_layer=False,
-             column_status=None,
-             save_figure=True,
-             map_save_name="PLOT_MAP.html",
-             dict_icons=None,
-             column_latitude="LATITUDE",
-             column_longitude="LONGITUDE",
-             name_column_tooltip="AGENCIA",
-             name_column_header="NOME AG"):
-
+def load_map(
+    data=None,
+    map_layer_default="openstreetmap",
+    circle_radius=0,
+    validator_add_layer=False,
+    column_status=None,
+    save_figure=True,
+    map_save_name="PLOT_MAP.html",
+    dict_icons=None,
+    column_latitude="LATITUDE",
+    column_longitude="LONGITUDE",
+    name_column_tooltip="AGENCIA",
+    name_column_header="NOME AG",
+):
     def add_layers_control(mapobj, validator_add_layer=False):
         if validator_add_layer:
             # ADICIONANDO OS LAYERS
@@ -208,7 +233,6 @@ def load_map(data=None,
     def add_markers(mapobj, data=None, circle_radius=0):
         # VERIFICANDO SE HÁ UM DATAFRAME ENVIADO COMO ARGUMENTO
         if data is not None:
-
             # VERIFICANDO SE HÁ UM SOMBREAMENTO A SER DESENHADO
             if circle_radius > 0:
                 """
@@ -221,13 +245,16 @@ def load_map(data=None,
                 circle_radius = circle_radius * 1000
 
                 # OBTENDO O TEXTO DO TOOLTIP QUE VAI SER COLOCADO NO SOMBREAMENTO
-                name_tooltip_sombreamento = settings.get("NAME_TOOLTIP_SOMBREAMENTO", "")
+                name_tooltip_sombreamento = settings.get(
+                    "NAME_TOOLTIP_SOMBREAMENTO", ""
+                )
 
-                logger.info("ATUALIZANDO O MAPA - SOMBREAMENTO - {} m".format(circle_radius))
+                logger.info(
+                    "ATUALIZANDO O MAPA - SOMBREAMENTO - {} m".format(circle_radius)
+                )
 
             # PERCORRENDO O DATAFRAME
             for idx, row in data.iterrows():
-
                 # OBTENDO O STATUS
                 status = row.get(column_status)
 
@@ -236,7 +263,6 @@ def load_map(data=None,
                 long = row.get(column_longitude)
 
                 if isinstance(lat, numbers.Number) and isinstance(long, numbers.Number):
-
                     # OBTENDO O HTML DO ICON
                     html = convert_df_html(
                         row_df=row,
@@ -248,7 +274,7 @@ def load_map(data=None,
                     )
 
                     iframe = branca.element.IFrame(html=html, width=510, height=280)
-                    popup = folium.Popup(folium.Html(html, script=True), max_width=500)
+                    popup = folium.Popup(iframe, max_width=500)
 
                     current_icon = get_icon(dict_icons, status)
 
@@ -256,10 +282,10 @@ def load_map(data=None,
                         location=[lat, long],
                         popup=popup,
                         icon=current_icon,
-                        tooltip=get_name_tooltip(data=row,
-                                                 name_column_tooltip=name_column_tooltip,
-                                                 sep=" - "),
-                        lazy=True
+                        tooltip=get_name_tooltip(
+                            data=row, name_column_tooltip=name_column_tooltip, sep=" - "
+                        ),
+                        lazy=True,
                     ).add_to(mapobj)
 
                     # VALIDANDO SE É DESEJADO ADICIONAR CIRCLEMARKER
@@ -270,8 +296,9 @@ def load_map(data=None,
                             color="crimson",
                             fill="orange",
                             opacity=0.3,
-                            tooltip="{}{}".format(name_tooltip_sombreamento,
-                                                  row[name_column_header])
+                            tooltip="{}{}".format(
+                                name_tooltip_sombreamento, row[name_column_header]
+                            ),
                         ).add_to(mapobj)
 
         return mapobj
@@ -280,7 +307,7 @@ def load_map(data=None,
     footprint_map = folium.Map(
         location=[-15.768857589354258, -47.905384728712384],
         zoom_start=4,
-        tiles=map_layer_default
+        tiles=map_layer_default,
     )
 
     # ADICIONANDO LAYERS

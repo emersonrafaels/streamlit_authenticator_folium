@@ -3,10 +3,59 @@ import pandas as pd
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 
+def column_to_uppercase(data):
+    # OBTENDO TODAS AS COLNAS DO DATAFRAME
+    # APLICANDO UPPERCASE
+    newcols = [column.upper() for column in data.columns]
+
+    # FORMATANDO O DATAFRAME
+    data.columns = newcols
+
+    # RETORNANDO O DATAFRAME FORMATADO EM UPPERCASE
+    return data
+
+
+def rows_to_uppercase(data, trim=False):
+    # OBTENDO TODAS AS COLNAS DO DATAFRAME
+    # APLICANDO UPPERCASE
+    for column in data.select_dtypes(include="O").columns:
+        if trim:
+            data[column] = data[column].apply(lambda x: str(x).upper().strip())
+        else:
+            data[column] = data[column].apply(lambda x: str(x).upper())
+
+    return data
+
+
 @st.cache_data
-def load_data(data_dir):
+def load_data(data_dir, column_uppercase=True, row_uppercase=True, trim_values=True):
+    """
+
+    REALIZA A LEITURA DOS DADOS
+
+    # Arguments
+        data_dir                 - Required: Dado a ser lido (Path)
+        column_uppercase         - Required: Validador para tornar
+                                             todas colunas uppercase (Boolean)
+        row_uppercase            - Required: Validador para tornar
+                                             todas linhas (valores) uppercase (Boolean)
+        trim_values              - Required: Validador para remover espaços antes e depois,
+                                             em valores strings (Boolean)
+
+    # Returns
+        df                       - Required: Dado após leitura (DataFrame)
+
+    """
     # REALIZANDO A LEITURA DOS DADOS
-    df = pd.read_excel(data_dir)
+    if "csv" in data_dir:
+        df = pd.read_csv(data_dir)
+    else:
+        df = pd.read_excel(data_dir)
+
+    if column_uppercase:
+        df = column_to_uppercase(data=df)
+    if row_uppercase:
+        df = rows_to_uppercase(data=df, trim=trim_values)
 
     return df
 
@@ -17,7 +66,7 @@ def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):
         enablePivot=False, enableValue=True, enableRowGroup=True
     )
     gb.configure_pagination(
-        paginationAutoPageSize=True, paginationPageSize=5
+        paginationAutoPageSize=True, paginationPageSize=10
     )  # Add pagination
     gb.configure_side_bar(
         filters_panel=True, columns_panel=True, defaultToolPanel=""
@@ -53,28 +102,3 @@ def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):
     )
 
     return grid_response
-
-
-def get_indicators_before_versus_after(
-    df1, df2, column_on="CÓDIGO AG", name_column_indicator="CRUZAMENTO"
-):
-    # REALIZANDO O JOIN ENTRE OS DATAFRAMES
-    df_join = pd.merge(
-        df1, df2, on=column_on, how="inner", suffixes=("_antes", "_depois")
-    )
-
-    return df_join
-
-
-def filter_columns_multiselect(colunas_desejadas, df_columns):
-    colunas_desejadas_antes_depois = []
-
-    for column in colunas_desejadas:
-        colunas_desejadas_antes_depois.append(str(column))
-        colunas_desejadas_antes_depois.append("{}{}".format(str(column), "_antes"))
-        colunas_desejadas_antes_depois.append("{}{}".format(str(column), "_depois"))
-
-    colunas_desejadas_filter = list(
-        filter(lambda x: x in df_columns, colunas_desejadas_antes_depois)
-    )
-    return colunas_desejadas_filter

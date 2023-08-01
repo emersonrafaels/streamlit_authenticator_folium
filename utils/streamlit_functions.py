@@ -3,11 +3,14 @@ from io import BytesIO
 
 import streamlit as st
 
-def add_logo(logo_url: str,
-             width: int = 50,
-             location='sidebar',
-             local_form=None,
-             position_image='center'):
+
+def add_logo(
+    logo_url: str,
+    width: int = 50,
+    location="sidebar",
+    local_form=None,
+    position_image="center",
+):
     """
 
     FUNÇÃO CUJO OBJETIVO É ADICIONAR UM LOGO NO SIDEBAR
@@ -44,45 +47,45 @@ def add_logo(logo_url: str,
         logo_url = BytesIO(base64.b64decode(logo_url))
 
     if local_form is None:
-        if location == 'main':
+        if location == "main":
             col1, col2, col3 = st.columns(3)
         else:
             col1, col2, col3 = st.sidebar.columns(3)
 
         with col1:
-            if position_image == 'left':
+            if position_image == "left":
                 col1.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
 
         with col2:
-            if position_image == 'center':
+            if position_image == "center":
                 col2.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
 
         with col3:
-            if position_image == 'right':
+            if position_image == "right":
                 col3.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
 
     else:
         col1, col2, col3 = local_form.columns(3)
         with col1:
-            if position_image == 'left':
+            if position_image == "left":
                 col1.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
 
         with col2:
-            if position_image == 'center':
+            if position_image == "center":
                 col2.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
 
         with col3:
-            if position_image == 'right':
+            if position_image == "right":
                 col3.image(image=logo_url, width=width)
             else:
-                st.write(' ')
+                st.write(" ")
