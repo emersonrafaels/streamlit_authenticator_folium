@@ -49,6 +49,21 @@ def load_page_plan_estrategico():
     # INCLUINDO O MAPA NO APP
     st_data = st_folium(mapobj, width=1000, height=500)
 
+    # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
+    with st.container():
+        col1, col2 = st.columns(2)
+        with col1:
+            ag_selected = st.selectbox(label="Agência",
+                                       options=df_planejamento[settings.get("COLUMN_NUM_AGENCIA",
+                                                                            "CÓDIGO AG")].unique(),
+                                       help="Selecione o número da agência desejada")
+        with col2:
+            ag_action = st.selectbox(label="Estratégia",
+                                       options=settings.get("OPTIONS_ESTRATEGIA",
+                                                            ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]),
+                                       help="Selecione a estratégia desejada para a agência")
+
+
 
 if __name__ == "__main__":
     load_page_plan_estrategico()

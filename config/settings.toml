@@ -15,7 +15,8 @@ MAP_ICON_DEFALT = "assets/itau.png"
 MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelho.png", "AMARELA"="assets/itau_amarelo.png", "VERDE"="assets/itau_verde.png"}
 
 [development]
-DATA_DIR_AGENCIAS = "data/footprint_agencias.xlsx"
+DATA_DIR_AGENCIAS = "data/FOOTPRINT_PLANEJAMENTO_ESTRATEGICO.xlsx"
+COLUMN_NUM_AGENCIA = "CÓDIGO AG"
 VALIDATOR_ADD_LAYER = true
 MAP_SAVE_FIGURE = true
 MAP_SAVE_NAME = "PLOT_MAP.html"
@@ -24,3 +25,5 @@ COLUMN_LATITUDE = "LATITUDE"
 COLUMN_LONGITUDE = "LONGITUDE"
 MAP_COLUMN_TOOLTIP = "CÓDIGO AG"
 MAP_COLUMN_HEADER = "ENDEREÇO"
+
+OPTIONS_ESTRATEGIA = ["Encerrar", "Manter", "Espaço Itaú"]
