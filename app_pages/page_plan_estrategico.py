@@ -35,6 +35,22 @@ def __save_action__(data, ag_selected, action_selected):
 
 def __save_excel__(data):
 
+    """
+
+        SALVA O DATAFRAME ATUAL
+
+        COMO O DATAFRAME É ATUALIZADO
+        COM AS AÇÕES DO USÁRIO
+        ESSE DATAFRAME REPRESENTA AS
+        ESTRATÉGIAS ADOTADAS
+
+        # Arguments
+            data            - Required: Dados em tela (DataFrame)
+
+        # Returns
+
+    """
+
     dir_save = str(Path(dir_root,
                     settings.get("DIR_SAVE_RESULT",
                                  "resultados/RESULTADO_ESTRATEGICO")))
@@ -45,6 +61,10 @@ def __save_excel__(data):
     logger.info("DADOS SALVOS COM SUCESSO EM: {}".format(dir_save))
 
 def load_page_plan_estrategico():
+
+    # INICIALIZANDO AS VARIÁVEIS AUXILIARES
+    if "current_map_df" not in st.session_state.keys():
+        st.session_state["current_map_df"] = pd.DataFrame()
 
     if "df_planejamento" not in st.session_state.keys():
         # CARREGANDO DATAFRAME
@@ -78,10 +98,8 @@ def load_page_plan_estrategico():
     else:
         df_map = df_planejamento
 
-    logger.warning("LEN: {}".format(len(df_map)))
-
     # PLOTANDO O MAPA
-    validator, mapobj = load_map(
+    validator, st.session_state["mapobj"], st.session_state["current_map_df"] = load_map(
         data=df_map,
         map_layer_default=settings.get("MAP_LAYER_DEFAULT", "openstreetmap"),
         circle_radius=0,
@@ -99,7 +117,7 @@ def load_page_plan_estrategico():
     )
 
     # INCLUINDO O MAPA NO APP
-    st_data = st_folium(mapobj, width=1000, height=500)
+    st_data = st_folium(st.session_state["mapobj"], width=1000, height=500)
 
     # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
     with st.container():
