@@ -1,0 +1,38 @@
+/*Aba final com Made With Streamlit*/
+.css-qri22k{
+    display: black;
+    color: rgba(49, 51, 63, 0.4);
+    flex: 0 1 0%;
+    font-size: 14px;
+    min-width: auto;
+    max-width: initial;
+    padding: 0.5rem 1rem;
+    width: 100%;
+}
+
+/*Menu lateral*/
+.css-9s5bis{
+    display: none;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    font-weight: 400;
+    border-radius: 0.25rem;
+    margin: 0px 0.125rem;
+    color: inherit;
+    width: auto;
+}
+
+[data-testid-metric-container]{
+    box-shadow: 0 0 3px #cccccc;
+    padding: 10px;
+}
+
+.plot-container>div{
+    box-shadow: 0 0 3px #cccccc
+}
+
+.css-p3h565, [data-css-p3h565]{
+    color: white;
+}
