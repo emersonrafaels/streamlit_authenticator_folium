@@ -7,7 +7,7 @@ from streamlit_folium import st_folium
 from loguru import logger
 
 from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
-from utils.map.map_functions import load_map
+from utils.map.map_functions import load_map, download_folium_map
 
 dir_root = Path(__file__).absolute().parent.parent
 
@@ -144,20 +144,23 @@ def load_page_plan_estrategico():
 
     # SALVAR RESULTADOS
     with st.container():
-        col1_save, col2_save = st.columns(2)
-        with col1_save:
-            # st.download_button(
-            #     label="Download mapa",
-            #     data=mapobj,
-            #     file_name="FOOTPRINT.html",
-            #     mime="text/html",
-            # )
+        col1_save, col2_save, col3_save = st.columns(3)
+        with col2_save:
+            st.download_button(
+                label="Download mapa (html)",
+                data=download_folium_map(st.session_state["mapobj"]),
+                file_name="FOOTPRINT_MAPA.html",
+                mime="text/html",
+            )
             pass
 
-        with col2_save:
-            st.button(label="Salvar estratégia",
-                      help="Ao clicar no botão, os dados serão salvos na planilha auxiliar",
-                      on_click=__save_excel__, args=(df_planejamento,))
+        with col3_save:
+            validator_save_estrategia = st.button(label="Salvar estratégia",
+                                                  help="Ao clicar no botão, os dados serão salvos na planilha auxiliar",
+                                                  on_click=__save_excel__, args=(df_planejamento,))
+            if validator_save_estrategia:
+                logger.info("ESTRATÉGIA SALVA: {}".format(validator_save_estrategia))
+                st.success("Estratégia salva com sucesso", icon="")
 
 if __name__ == "__main__":
     load_page_plan_estrategico()

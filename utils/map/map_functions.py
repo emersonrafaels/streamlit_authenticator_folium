@@ -16,6 +16,25 @@ from utils.generic_functions import calculate_time_usage
 
 dir_root = Path(__file__).absolute().parent.parent.parent
 
+def download_folium_map(mapobj):
+
+    """
+
+        REALIZA O DOWNLOAD DE UM OBJETO FOLIUM (MAP)
+        EM FORMATO HTML
+
+        # Arguments
+            mapobj          - Required: Objeto (Map) folium para realizar download (Object)
+
+        # Returns
+            processed_map   - Reqired: Mapa em formato HTML (HTML)
+
+    """
+
+    processed_map = mapobj._repr_html_()
+
+    return processed_map
+
 
 def convert_df_html(
     row_df,
