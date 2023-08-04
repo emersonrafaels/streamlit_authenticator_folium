@@ -74,4 +74,4 @@ def main(authenticator, username):
             page_agencias.load_page_agencias()
 
         else:
-            st.empty
+            st.empty()
