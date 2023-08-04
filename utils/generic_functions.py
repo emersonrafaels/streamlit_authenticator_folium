@@ -61,10 +61,10 @@ def validator_convert_number(string):
 
     """
 
-    if is_integer_string(string):
-        return int(string)
-    elif is_float_string(string):
+    if is_float_string(string):
         return float(string)
+    elif is_integer_string(string):
+        return int(string)
     else:
         return None
 

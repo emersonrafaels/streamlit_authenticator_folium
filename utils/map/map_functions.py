@@ -357,7 +357,7 @@ def load_map(
         data = data[(~data[column_latitude].isna()) & (~data[column_longitude].isna())]
 
         logger.info(
-            "VALIDAÇÃO PARA CONSTRUÇÃO DO MAPA: {} DADOS".format(len(data)))
+            "APÓS VALIDAÇÃO PARA CONSTRUÇÃO DO MAPA: {} DADOS".format(len(data)))
 
         # CRIANDO O MAPA
         footprint_map = folium.Map(
