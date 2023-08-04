@@ -33,11 +33,19 @@ def load_page_agencias():
         logger.info("DADOS RECUPERADOS DO SESSION STATE COM SUCESSO")
         df_planejamento = st.session_state["df_planejamento"]
 
-	# INCLUINDO O DATAFRAME EM TELA
-	# NO MAIN
-	st.markdown("# APP - PÁGINA DE AGÊNCIAS")
+    # INCLUINDO O DATAFRAME EM TELA
+    # NO MAIN
+    st.markdown("# APP - PÁGINA DE AGÊNCIAS")
 
-	# CRIANDO UMA LINHA EM BRANCO
-	# st.divider()
+    # CRIANDO UMA LINHA EM BRANCO
+    # st.divider()
 
-	logger.info("{} AGÊNCIAS".format(len(df_planejamento)))
+    logger.info("{} AGÊNCIAS".format(len(df_planejamento)))
+
+    ag_selected = st.selectbox(label="Selecione uma agência",
+                               options=df_planejamento[
+                                   settings.get("COLUMN_NUM_AGENCIA",
+                                                "CÓDIGO AG")].unique(),
+                               help="Selecione o número da agência desejada")
+
+    st.divider()
