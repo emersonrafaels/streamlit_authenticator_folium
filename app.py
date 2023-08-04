@@ -69,5 +69,9 @@ def main(authenticator, username):
             # CARREGANDO A PÁGINA DE AUTOSSERVIÇO
             page_plan_estrategico.load_page_plan_estrategico()
 
-        if selected_estudo_desejado == "Agências":
+        elif selected_estudo_desejado == "Agências":
             # CARREGANDO A PÁGINA DE AGÊNCIAS
+            page_agencias.load_page_agencias()
+
+        else:
+            st.empty
