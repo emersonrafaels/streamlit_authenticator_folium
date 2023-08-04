@@ -6,7 +6,7 @@ from dynaconf import settings
 from loguru import logger
 
 from utils.streamlit_functions import add_logo
-from app_pages import page_plan_estrategico
+from app_pages import page_plan_estrategico, page_agencias
 
 # CONFIGURANDO O APP
 st.set_page_config(
@@ -68,3 +68,6 @@ def main(authenticator, username):
         if selected_estudo_desejado == "Plan. Estratégico":
             # CARREGANDO A PÁGINA DE AUTOSSERVIÇO
             page_plan_estrategico.load_page_plan_estrategico()
+
+        if selected_estudo_desejado == "Agências":
+            # CARREGANDO A PÁGINA DE AGÊNCIAS

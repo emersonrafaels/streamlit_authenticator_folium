@@ -52,8 +52,10 @@ def create_map():
 
 	footprint_map.save("MAPA.html")
 
+del data["STATUS"]
+
 # PLOTANDO O MAPA
-validator, mapobj = load_map(
+validator, mapobj, _ = load_map(
 	data=data,
 	map_layer_default=settings.get("MAP_LAYER_DEFAULT", "openstreetmap"),
 	circle_radius=0,
