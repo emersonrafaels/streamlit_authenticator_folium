@@ -39,6 +39,9 @@ def get_credentials():
 
 def main_authenticator():
 
+    # APLICANDO O STYLE CSS
+
+
     # OBTENDO AS CREDENCIAIS
     logger.info("OBTENDO AS CREDENCIAIS")
 

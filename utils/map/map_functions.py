@@ -11,7 +11,7 @@ from folium.plugins import MarkerCluster
 from dynaconf import settings
 from loguru import logger
 
-from utils.generic_functions import calculate_time_usage
+from utils.generic_functions import calculate_time_usage, convert_to_number
 
 
 dir_root = Path(__file__).absolute().parent.parent.parent
@@ -344,28 +344,45 @@ def load_map(
 
         return mapobj
 
-    # CRIANDO O MAPA
-    footprint_map = folium.Map(
-        location=[data[column_latitude].mean(),
-                  data[column_longitude].mean()],
-        zoom_start=4,
-        tiles=map_layer_default,
-    )
+    if column_latitude in data.columns and column_longitude in data.columns:
 
-    # ADICIONANDO LAYERS
-    footprint_map = add_layers_control(
-        mapobj=footprint_map, validator_add_layer=validator_add_layer
-    )
+        logger.info("INICIANDO A CONSTRUÇÃO DO MAPA COM {} DADOS".format(len(data)))
 
-    # ADICIONANDO MAKERS
-    footprint_map = add_markers(
-        mapobj=footprint_map, data=data, circle_radius=circle_radius
-    )
+        # GARANTINDO COLUNAS DE LATITUDE E LONGITUDE EM FORMATO FLOAT
+        for column in [column_latitude, column_longitude]:
+            data[column] = data[column].apply(lambda x: convert_to_number(value_to_convert=x,
+                                                                          type=float))
 
-    if save_figure:
-        footprint_map.save(map_save_name)
-        logger.info("MAPA SALVO COM SUCESSO")
+        # REMOVENDO VALORES NONE DA COLUNA DE LATITUDE E LONGITUDE
+        data = data[(~data[column_latitude].isna()) & (~data[column_longitude].isna())]
 
-    validator = True
+        logger.info(
+            "VALIDAÇÃO PARA CONSTRUÇÃO DO MAPA: {} DADOS".format(len(data)))
 
-    return validator, footprint_map, data
+        # CRIANDO O MAPA
+        footprint_map = folium.Map(
+            location=[data[column_latitude].mean(),
+                      data[column_longitude].mean()],
+            zoom_start=4,
+            tiles=map_layer_default,
+        )
+
+        # ADICIONANDO LAYERS
+        footprint_map = add_layers_control(
+            mapobj=footprint_map, validator_add_layer=validator_add_layer
+        )
+
+        # ADICIONANDO MAKERS
+        footprint_map = add_markers(
+            mapobj=footprint_map, data=data, circle_radius=circle_radius
+        )
+
+        if save_figure:
+            footprint_map.save(map_save_name)
+            logger.info("MAPA SALVO COM SUCESSO")
+
+        validator = True
+
+        return validator, footprint_map, data
+
+    return False, None, None

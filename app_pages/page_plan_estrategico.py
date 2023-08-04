@@ -1,4 +1,5 @@
 from pathlib import Path
+from inspect import stack
 
 import pandas as pd
 import streamlit as st
@@ -7,6 +8,7 @@ from streamlit_folium import st_folium
 from loguru import logger
 
 from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
+from utils.agstyler import draw_grid
 from utils.map.map_functions import load_map, download_folium_map
 
 dir_root = Path(__file__).absolute().parent.parent
@@ -32,6 +34,38 @@ def __save_action__(data, ag_selected, action_selected):
 
     # SALVANDO NO OBJETO GLOBAL
     st.session_state["df_planejamento"] = data
+
+def convert_dataframe_explorer(data, style):
+
+    if style == 'agstyle':
+
+        formatter = None
+        css = None
+
+        return draw_grid(
+            data,
+            formatter=formatter,
+            fit_columns=True,
+            selection='multiple',  # or 'single', or None
+            use_filterable=True,  # or False by default
+            use_groupable=True,
+            use_checkbox=True,
+            validator_all_rows_selected=True,
+            validator_enable_enterprise_modules=True,
+            theme='streamlit',
+            max_height=300,
+            css=css,
+        )
+
+    elif style == "aggrid_default":
+
+        return convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
+
+    else:
+        logger.warning("OPÇÃO NÃO VÁLIDA - {}".format(stack()[0][3]))
+
+        return convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
+
 
 def __save_excel__(data):
 
@@ -88,7 +122,9 @@ def load_page_plan_estrategico():
     # st.divider()
 
     # OBTENDO O DATAFRAME
-    dataframe_aggrid = convert_dataframe_to_aggrid(data=df_planejamento)
+    dataframe_aggrid = convert_dataframe_explorer(data=df_planejamento,
+                                                  style=settings.get("OPTION_DATAFRAME_EXPLORER",
+                                                                     "aggrid_default"))
 
     # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
     selected_df = pd.DataFrame(dataframe_aggrid["selected_rows"])

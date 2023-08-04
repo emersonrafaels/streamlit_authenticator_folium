@@ -14,6 +14,10 @@ AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME = {"USUARIO"="username", "EMAIL"="e
 # DIRETÓRIO PARA SAVE DOS RESULTADOS
 DIR_SAVE_RESULT = "resultados/RESULTADO_ESTRATEGICO.xlsx"
 
+# DATAFRAMES
+LIST_OPTIONS_DATAFRAME_EXPLORER = ["agstyle", "aggrid_default"]
+OPTION_DATAFRAME_EXPLORER = "aggrid_default"
+
 # MAPA
 MAP_ICON_DEFALT = "assets/itau.png"
 MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelho.png", "AMARELA"="assets/itau_amarelo.png", "VERDE"="assets/itau_verde.png"}

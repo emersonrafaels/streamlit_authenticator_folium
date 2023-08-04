@@ -17,7 +17,6 @@ data = load_data(
 )
 
 def create_map():
-
 	column_latitude = "LATITUDE"
 	column_longitude = "LONGITUDE"
 	map_layer_default = "cartodbpositron"
