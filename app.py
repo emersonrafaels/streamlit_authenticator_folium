@@ -19,6 +19,10 @@ st.set_page_config(
 
 def main(authenticator, username):
 
+    # APLICANDO O STYLE CSS
+    st.markdown('<style>.css-1v0mbdj.ebxwdo61{margin-left: 0px;}</style>',
+                unsafe_allow_html=True)
+
     # VERIFICANDO SE O USUÁRIO ESTÁ AUTENTICADO
     if st.session_state.get("authentication_status"):
 

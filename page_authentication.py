@@ -1,6 +1,6 @@
 import base64
 import yaml
-from time import sleep
+from os import path
 from pathlib import Path
 from yaml.loader import SafeLoader
 
@@ -68,6 +68,9 @@ def main_authenticator():
     """
 
     # APLICANDO O STYLE CSS
+    if path.exists(settings.get("STYLES_CSS")):
+        with open(settings.get("STYLES_CSS")) as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
     # OBTENDO AS CREDENCIAIS
     logger.info("OBTENDO AS CREDENCIAIS")
