@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from utils.api import api_geopy
+from src.utils.api import api_geopy
 
 # DEFININDO DIRETÓRIO CONTENDO OS DADOS DESEJADOS
 dir_root = Path(__file__).absolute().parent.parent

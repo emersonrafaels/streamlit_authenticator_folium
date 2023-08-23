@@ -1,3 +1,5 @@
+from config_app import config_app
+
 from dynaconf import settings
 
 from page_authentication import main_authenticator

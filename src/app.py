@@ -1,12 +1,8 @@
-import os
-from pathlib import Path
-
 import streamlit as st
 from dynaconf import settings
-from loguru import logger
 
 from utils.streamlit_functions import add_logo
-from app_pages import page_plan_estrategico, page_agencias
+from app_pages import page_agencias, page_plan_estrategico
 
 # CONFIGURANDO O APP
 st.set_page_config(

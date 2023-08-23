@@ -4,7 +4,7 @@ from inspect import stack
 import pandas as pd
 import streamlit as st
 from dynaconf import settings
-from streamlit_folium import st_folium
+from streamlit_folium import folium_static
 from loguru import logger
 
 from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
@@ -101,6 +101,7 @@ def load_page_plan_estrategico():
         st.session_state["current_map_df"] = pd.DataFrame()
 
     if "df_planejamento" not in st.session_state.keys():
+
         # CARREGANDO DATAFRAME
         df_planejamento = load_data(
             data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
@@ -114,6 +115,9 @@ def load_page_plan_estrategico():
         logger.info("DADOS RECUPERADOS DO SESSION STATE COM SUCESSO")
         df_planejamento = st.session_state["df_planejamento"]
 
+    if "selected_df" not in st.session_state.keys():
+        st.session_state["selected_df"] = st.session_state["df_planejamento"]
+
     # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
     st.markdown("# APP - PLANEJAMENTO ESTRATÉGICO")
@@ -121,16 +125,8 @@ def load_page_plan_estrategico():
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
 
-    # OBTENDO O DATAFRAME
-    dataframe_aggrid = convert_dataframe_explorer(data=df_planejamento,
-                                                  style=settings.get("OPTION_DATAFRAME_EXPLORER",
-                                                                     "aggrid_default"))
-
-    # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
-    selected_df = pd.DataFrame(dataframe_aggrid["selected_rows"])
-
-    if not selected_df.empty:
-        df_map = selected_df
+    if not st.session_state["selected_df"].empty:
+        df_map = st.session_state["selected_df"]
     else:
         df_map = df_planejamento
 
@@ -153,7 +149,16 @@ def load_page_plan_estrategico():
     )
 
     # INCLUINDO O MAPA NO APP
-    st_data = st_folium(st.session_state["mapobj"], width=1000, height=500)
+    st_data = folium_static(st.session_state["mapobj"], width=1000, height=500)
+
+    # OBTENDO O DATAFRAME
+    dataframe_aggrid = convert_dataframe_explorer(data=df_planejamento,
+                                                  style=settings.get(
+                                                      "OPTION_DATAFRAME_EXPLORER",
+                                                      "aggrid_default"))
+
+    # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
+    st.session_state["selected_df"] = pd.DataFrame(dataframe_aggrid["selected_rows"])
 
     # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
     with st.container():

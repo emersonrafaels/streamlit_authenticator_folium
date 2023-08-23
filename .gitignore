@@ -1,10 +1,10 @@
 __pycache__/
 .idea/
-data/~$f*
+src/data/~$f*
 PLOT_MAP.html
-resultados/
-MarkerCluster.ipynb
+src/resultados/
+src/MarkerCluster.ipynb
 FOOTPRINT_PLANEJAMENTO_ESTRATEGICO.log
-testes*
+src/testes
 run.py
 run.spec

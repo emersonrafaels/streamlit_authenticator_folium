@@ -6,13 +6,11 @@ from inspect import stack
 import branca
 import pandas as pd
 import folium
-import streamlit as st
 from folium.plugins import MarkerCluster
 from dynaconf import settings
 from loguru import logger
 
 from utils.generic_functions import calculate_time_usage, convert_to_number
-
 
 dir_root = Path(__file__).absolute().parent.parent.parent
 
