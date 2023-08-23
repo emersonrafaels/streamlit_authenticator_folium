@@ -10,68 +10,80 @@ from app_pages import page_plan_estrategico, page_agencias
 
 # CONFIGURANDO O APP
 st.set_page_config(
-    page_title="FOOTPRINT - PLANEJAMENTO ESTRATÉGICO",
-    page_icon=":world-map:",
+    page_title=settings.get("APPNAME_TITLE",
+                            "FOOTPRINT - PLANEJAMENTO ESTRATÉGICO"),
+    page_icon=settings.get("APPNAME_TITLE_ICON",
+                            ":world-map:"),
     layout="wide",
 )
 
-
 def main(authenticator, username):
+
+    # VERIFICANDO SE O USUÁRIO ESTÁ AUTENTICADO
     if st.session_state.get("authentication_status"):
-        # OBTENDO AS INFOS DO USUÁRIO LOGADO
-        infos_username_log = st.session_state["users"]["usernames"][username]
 
-        logger.debug("USUÁRIO LOGADO: {}".format(infos_username_log))
+        # VERIFICANDO SE O USUÁRIO CONSTA CORRETAMENTE NA LISTA DE USERNAMES
+        if username in st.session_state["users"]["usernames"]:
 
-        # ADICIONANDO TITULO DA PÁGINA
-        # st.title("APP - PLANEJAMENTO ESTRATÉGICO")
+            # OBTENDO AS INFOS DO USUÁRIO LOGADO
+            infos_username_log = st.session_state["users"]["usernames"][username]
 
-        # OBTENDO O DIRETÓRIO DO LOGO
-        dir_logo = settings.get("LOGO_APP")
+            # ADICIONANDO TITULO DA PÁGINA
+            # st.title("APP - PLANEJAMENTO ESTRATÉGICO")
 
-        # ADICIONANDO LOGO
-        add_logo(dir_logo, width=100, location="sidebar", position_image="left")
+            # OBTENDO O DIRETÓRIO DO LOGO
+            dir_logo = settings.get("LOGO_APP")
 
-        with st.sidebar:
-            st.markdown("Bem vindo: {}".format(infos_username_log["name"]))
+            # ADICIONANDO LOGO
+            add_logo(dir_logo, width=100, location="sidebar", position_image="left")
 
-            # CRIANDO UMA LINHA EM BRANCO
-            st.divider()
+            with st.sidebar:
+                st.markdown("Bem vindo: {}".format(infos_username_log["name"]))
 
-            # ESTUDO DESEJADO
-            st.title("Defina o estudo desejado")
+                # CRIANDO UMA LINHA EM BRANCO
+                st.divider()
 
-            options_estudos = [
-                "Plan. Estratégico",
-                "Agências",
-            ]
+                # ESTUDO DESEJADO
+                st.title("Escolha a página desejada")
 
-            selected_estudo_desejado = st.radio(
-                label="Estudo desejado",
-                options=options_estudos,
-                index=0,
-                key=None,
-                help="Escolha o estudo desejado e na página central aparecerá novas opções",
-                on_change=None,
-                disabled=False,
-                horizontal=False,
-                label_visibility="visible",
-            )
+                options_estudos = [
+                    "Plan. Estratégico",
+                    "Agências",
+                ]
 
-            # CRIANDO UMA LINHA EM BRANCO
-            st.divider()
+                selected_estudo_desejado = st.radio(
+                    label="Visão desejada",
+                    options=options_estudos,
+                    index=0,
+                    key=None,
+                    help="Escolha a visão desejado e na página central aparecerão novas informações",
+                    on_change=None,
+                    disabled=False,
+                    horizontal=False,
+                    label_visibility="visible",
+                )
 
-            # BOTÃO DE LOGOUT
-            authenticator.logout("Sair", "main", key="app_page")
+                # CRIANDO UMA LINHA EM BRANCO
+                st.divider()
 
-        # DEFININDO A PÁGINA DESEJADA
-        if selected_estudo_desejado == "Plan. Estratégico":
-            # CARREGANDO A PÁGINA DE AUTOSSERVIÇO
-            page_plan_estrategico.load_page_plan_estrategico()
+                # BOTÃO DE LOGOUT
+                authenticator.logout("Sair", "main", key="app_page")
 
-        elif selected_estudo_desejado == "Agências":
-            # CARREGANDO A PÁGINA DE AGÊNCIAS
-            page_agencias.load_page_agencias()
+            # DEFININDO A PÁGINA DESEJADA
+            if selected_estudo_desejado == "Plan. Estratégico":
+                # CARREGANDO A PÁGINA DE AUTOSSERVIÇO
+                page_plan_estrategico.load_page_plan_estrategico()
+
+            elif selected_estudo_desejado == "Agências":
+                # CARREGANDO A PÁGINA DE AGÊNCIAS
+                page_agencias.load_page_agencias()
+
+            else:
+                st.empty()
 
         else:
-            st.empty()
+            # CASO OCORRA ALGUM ERRO DE AUTENTICAÇÃO
+            st.session_state["authentication_status"] = False
+
+            # APARECE O BOTÃO DE SAIR, PARA PERMITIR LIMPEZA DO COOKIE
+            authenticator.logout("Sair", "main", key="app_page")

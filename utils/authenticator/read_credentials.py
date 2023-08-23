@@ -6,33 +6,52 @@ from dynaconf import settings
 
 
 def read_credentials_excel(dir_credential_excel, col_index=None):
+
+    """
+
+        FUNÇÃO PARA REALIZAR A LEITURA DO EXCEL
+        CONTENDO AS CREDENCIAIS
+
+        # Arguments
+            dir_credential_excel      - Required: Diretório do excel de credenciais (Path)
+            col_index                 - Required: Nome da coluna contendo o user (String)
+
+        # Returns
+
+    """
+
     # INICIANDO A VARIÁVEL QUE ARMAZENARÁ AS CREDENCIAIS
     credentials_usernames = {"usernames": ""}
 
     logger.info("INICIANDO A LEITURA DAS CREDENCIAIS")
 
-    # REALIZANDO A LEITURA DO EXCEL
+    # VERIFICANDO SE O ARQUIVO EXCEL EXISTE
     if os.path.exists(dir_credential_excel):
+
+        # REALIZANDO A LEITURA DO EXCEL
         df = pd.read_excel(dir_credential_excel)
 
         # VALIDANDO SE É DESEJADO RENOMEAR AS COLUNAS DO DATAFRAME
         if settings.get("VALIDATOR_RENAME_CREDENTIALS"):
-            # OBTENDO O DICT PARA RENAME
-            dict_rename = settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME")
 
             # VERIFICANDO SE O DICT É DIFERENTE DE NONE
-            if dict_rename:
+            if settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME"):
+
                 # APLICANDO O DICT RENAME
-                df = df.rename(columns=dict_rename)
+                df = df.rename(columns=settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME"))
 
         # OBTENDO O DADO EM FORMATO DICT
         credentials = df.to_dict(orient="records")
 
-        # DEFININDO O INDEX
+        # DEFININDO A COLUNA DE USER
         if col_index is not None and col_index in df.columns:
+
+            # OBTENDO TODAS AS CREDENCIAIS
             credentials = {
                 credential[col_index]: credential for credential in credentials
             }
+
+            # ATUALIZANDO O DICT DE CREDENCIAIS
             credentials_usernames = {"usernames": credentials}
 
     else:

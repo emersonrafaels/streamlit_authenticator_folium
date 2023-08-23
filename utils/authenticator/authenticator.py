@@ -156,9 +156,10 @@ class Authenticate:
         bool
             Validity of entered credentials.
         """
+
         if self.username in self.credentials["usernames"]:
             try:
-                print(self._check_pw())
+                print("USUÁRIO CORRETO - AUTENTICAÇÃO DO PASSWORD: {}".format(self._check_pw()))
                 if self._check_pw():
                     if inplace:
                         st.session_state["name"] = self.credentials["usernames"][
@@ -201,6 +202,7 @@ class Authenticate:
         location_image="main",
         position_image="center",
     ) -> tuple:
+
         """
         Creates a login widget.
 
@@ -220,8 +222,10 @@ class Authenticate:
         str
             Username of the authenticated user.
         """
+
         if location not in ["main", "sidebar"]:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
+
         if not st.session_state["authentication_status"]:
             self._check_cookie()
             if not st.session_state["authentication_status"]:
