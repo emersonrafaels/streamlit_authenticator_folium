@@ -10,7 +10,6 @@ from loguru import logger
 from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
 from utils.agstyler import draw_grid
 from utils.map.map_functions import load_map, download_folium_map
-from utils.dataframe_explorer import dataframe_explorer
 
 dir_root = Path(__file__).absolute().parent.parent
 
@@ -60,17 +59,12 @@ def convert_dataframe_explorer(data, style):
 
     elif style == "aggrid_default":
 
-        return style, convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
-
-    elif style == "dataframe_explorer":
-
-        return style, dataframe_explorer(data,
-                                         case=False)
+        return convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
 
     else:
         logger.warning("OPÇÃO NÃO VÁLIDA - {}".format(stack()[0][3]))
 
-        return style, convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
+        return convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
 
 
 def __save_excel__(data):
@@ -102,12 +96,9 @@ def __save_excel__(data):
 
 def load_page_plan_estrategico():
 
-    """
-
-        DATAFRAME ORIGINAL - st.session_state["df_planejamento"] = df_planejamento
-        DATAFRAME SELECIONADO - st.session_state["selected_df"]
-
-    """
+    # INICIALIZANDO AS VARIÁVEIS AUXILIARES
+    if "current_map_df" not in st.session_state.keys():
+        st.session_state["current_map_df"] = pd.DataFrame()
 
     if "df_planejamento" not in st.session_state.keys():
 
@@ -121,16 +112,11 @@ def load_page_plan_estrategico():
         st.session_state["df_planejamento"] = df_planejamento
 
     else:
-        logger.info("df_planejamento - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(len(st.session_state["df_planejamento"])))
+        logger.info("DADOS RECUPERADOS DO SESSION STATE COM SUCESSO")
         df_planejamento = st.session_state["df_planejamento"]
 
     if "selected_df" not in st.session_state.keys():
-
-        # CARREGANDO DATAFRAME
         st.session_state["selected_df"] = st.session_state["df_planejamento"]
-
-    else:
-        logger.info("selected_df - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(len(st.session_state["selected_df"])))
 
     # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
@@ -139,9 +125,14 @@ def load_page_plan_estrategico():
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
 
+    if not st.session_state["selected_df"].empty:
+        df_map = st.session_state["selected_df"]
+    else:
+        df_map = df_planejamento
+
     # PLOTANDO O MAPA
     validator, st.session_state["mapobj"], st.session_state["current_map_df"] = load_map(
-        data=st.session_state["selected_df"],
+        data=df_map,
         map_layer_default=settings.get("MAP_LAYER_DEFAULT", "openstreetmap"),
         circle_radius=0,
         validator_add_layer=settings.get("VALIDATOR_ADD_LAYER", False),
@@ -157,38 +148,60 @@ def load_page_plan_estrategico():
         name_column_header=settings.get("MAP_COLUMN_HEADER", "ENDEREÇO"),
     )
 
+    # INCLUINDO O MAPA NO APP
+    st_data = folium_static(st.session_state["mapobj"], width=1000, height=500)
+
+    # OBTENDO O DATAFRAME
+    dataframe_aggrid = convert_dataframe_explorer(data=df_planejamento,
+                                                  style=settings.get(
+                                                      "OPTION_DATAFRAME_EXPLORER",
+                                                      "aggrid_default"))
+
+    # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
+    st.session_state["selected_df"] = pd.DataFrame(dataframe_aggrid["selected_rows"])
+
+    # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
     with st.container():
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ag_selected = st.selectbox(label="Agência",
+                                       options=df_planejamento[settings.get("COLUMN_NUM_AGENCIA",
+                                                                            "CÓDIGO AG")].unique(),
+                                       help="Selecione o número da agência desejada")
+        with col2:
+            ag_action = st.selectbox(label="Estratégia",
+                                       options=settings.get("OPTIONS_ESTRATEGIA",
+                                                            ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]),
+                                       help="Selecione a estratégia desejada para a agência")
 
-        # INCLUINDO O MAPA NO APP
-        st_data = folium_static(st.session_state["mapobj"],
-                                width=900,
-                                height=500)
+        with col3:
+            st.markdown("")
+            st.markdown("")
+            bt_action = st.button(label="Aplicar estratégia",
+                                                           help="Ao clicar no botão, os dados serão salvos na atualizados",
+                                  on_click=__save_action__, args=(df_planejamento,
+                                                                  ag_selected,
+                                                                  ag_action))
 
-        # OBTENDO O DATAFRAME
-        dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(data=df_planejamento,
-                                                      style=settings.get(
-                                                          "OPTION_DATAFRAME_EXPLORER",
-                                                          "aggrid_default"))
+    # SALVAR RESULTADOS
+    with st.container():
+        col1_save, col2_save, col3_save = st.columns(3)
+        with col2_save:
+            st.download_button(
+                label="Download mapa (html)",
+                data=download_folium_map(st.session_state["mapobj"]),
+                file_name="FOOTPRINT_MAPA.html",
+                mime="text/html",
+            )
+            pass
 
-        if dataframe_explorer_type in ["agstyle", "aggrid_default"]:
-
-            # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
-            st.session_state["selected_df"] = pd.DataFrame(dataframe_return["selected_rows"])
-        else:
-            # PLOTANDO O DATAFRAME EM TELA
-            selected_df = st.dataframe(dataframe_return,
-                                       use_container_width=True)
-            # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
-            st.session_state["selected_df"] = dataframe_return
-
-        if not st.session_state["selected_df"].equals(st.session_state["current_map_df"]):
-            # REALIZAR NOVO REFRESH NA PÁGINA
-            st.experimental_rerun()
-
-        st.text("Foram selecionados {} agências".format(
-            len(st.session_state["selected_df"])))
-        st.text("Mapa: {} agências".format(
-            len(st.session_state["current_map_df"])))
+        with col3_save:
+            validator_save_estrategia = st.button(label="Salvar estratégia",
+                                                  help="Ao clicar no botão, os dados serão salvos na planilha auxiliar",
+                                                  on_click=__save_excel__, args=(df_planejamento,))
+            if validator_save_estrategia:
+                logger.info("ESTRATÉGIA SALVA: {}".format(validator_save_estrategia))
+                st.success("Estratégia salva com sucesso", icon="")
 
 if __name__ == "__main__":
     load_page_plan_estrategico()

@@ -342,6 +342,9 @@ def load_map(
 
         return mapobj
 
+    # SALVANDO O DATAFRAME DE INPUT
+    original_data = data.copy()
+
     if column_latitude in data.columns and column_longitude in data.columns:
 
         logger.info("INICIANDO A CONSTRUÇÃO DO MAPA COM {} DADOS".format(len(data)))
@@ -381,6 +384,6 @@ def load_map(
 
         validator = True
 
-        return validator, footprint_map, data
+        return validator, footprint_map, original_data
 
-    return False, None, None
+    return False, None, original_data

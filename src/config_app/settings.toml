@@ -23,8 +23,8 @@ FORM_NAME_BUTTON = "Entrar"
 DIR_SAVE_RESULT = "resultados/RESULTADO_ESTRATEGICO.xlsx"
 
 # DATAFRAMES
-LIST_OPTIONS_DATAFRAME_EXPLORER = ["agstyle", "aggrid_default"]
-OPTION_DATAFRAME_EXPLORER = "aggrid_default"
+LIST_OPTIONS_DATAFRAME_EXPLORER = ["agstyle", "aggrid_default", "dataframe_explorer"]
+OPTION_DATAFRAME_EXPLORER = "dataframe_explorer"
 
 # MAPA
 MAP_ICON_DEFALT = "assets/itau.png"
