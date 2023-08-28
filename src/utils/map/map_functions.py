@@ -6,6 +6,7 @@ from inspect import stack
 import branca
 import pandas as pd
 import folium
+import streamlit as st
 from folium.plugins import MarkerCluster
 from dynaconf import settings
 from loguru import logger
@@ -219,7 +220,6 @@ def get_name_tooltip(data, name_column_tooltip, sep=" - "):
         return name_column_tooltip
 
 
-@calculate_time_usage
 def load_map(
     data=None,
     map_layer_default="openstreetmap",

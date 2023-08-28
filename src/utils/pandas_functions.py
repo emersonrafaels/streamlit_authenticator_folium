@@ -102,3 +102,18 @@ def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):
     )
 
     return grid_response
+
+
+def compare_dataframes(df1, df2):
+
+    # FILTRANDO NULOS EM AMBOS DATAFRAMES
+    df1_fill = df1.fillna("")
+    df2_fill = df2.fillna("")
+
+    df1_fill.to_excel("SELECTED_DF.xlsx", index=None)
+
+    df2_fill.to_excel("CURRENT_DF.xlsx", index=None)
+
+    print(df1_fill.equals(df2_fill))
+
+    return df1_fill.equals(df2_fill)

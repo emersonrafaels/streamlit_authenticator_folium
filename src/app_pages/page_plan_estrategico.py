@@ -7,7 +7,7 @@ from dynaconf import settings
 from streamlit_folium import folium_static
 from loguru import logger
 
-from utils.pandas_functions import load_data, convert_dataframe_to_aggrid
+from utils.pandas_functions import load_data, convert_dataframe_to_aggrid, compare_dataframes
 from utils.agstyler import draw_grid
 from utils.map.map_functions import load_map, download_folium_map
 from utils.dataframe_explorer import dataframe_explorer
@@ -109,6 +109,9 @@ def load_page_plan_estrategico():
 
     """
 
+    # INICIANDO UM VALIDADOR DO RERUN AUTOMÁTICO
+    validator_rerun = True
+
     if "df_planejamento" not in st.session_state.keys():
 
         # CARREGANDO DATAFRAME
@@ -139,6 +142,48 @@ def load_page_plan_estrategico():
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
 
+    select_column1, select_column2, select_column3 = st.columns(3)
+
+    # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
+    lista_mercados = list(
+        st.session_state["df_planejamento"]["MERCADO"].unique())
+    lista_regioes = list(st.session_state["df_planejamento"]["REGIÃO"].unique())
+    lista_supt = list(st.session_state["df_planejamento"]["SUPT"].unique())
+
+    logger.info(lista_mercados)
+    logger.info(lista_regioes)
+    logger.info(lista_supt)
+
+    # CRIANDO O SELECT BOX DE MERCADO
+    filtro_mercado = select_column1.selectbox(label="Mercado",
+                                              options=lista_mercados,
+                                              help="Selecione o mercado desejado")
+
+    filtro_regiao = select_column2.selectbox(label="Região",
+                                  options=lista_regioes,
+                                  help="Selecione a região desejada")
+
+    filtro_supt = select_column3.selectbox(label="Superintendência",
+                                           options=lista_supt,
+                                           help="Selecione a superintendência desejada")
+
+    if st.sidebar.button('Redefinir Filtros'):
+        filtro_mercado = 'Todos'
+        filtro_regiao = 'Todas'
+        filtro_supt = 'Todas'
+
+    st.session_state["selected_df"] = []
+
+    print(filtro_mercado, filtro_regiao, filtro_supt)
+
+    for dado in st.session_state["df_planejamento"]:
+        # Aplicar filtros
+        if (filtro_mercado == 'Todos' or dado['MERCADO'] == filtro_mercado) and \
+                (filtro_regiao == 'Todas' or dado[
+                    'REGIÃO'] == filtro_regiao) and \
+                (filtro_supt == 'Todas' or dado['SUPT'] == filtro_supt):
+            st.session_state["selected_df"].append(dado)
+
     # PLOTANDO O MAPA
     validator, st.session_state["mapobj"], st.session_state["current_map_df"] = load_map(
         data=st.session_state["selected_df"],
@@ -157,6 +202,8 @@ def load_page_plan_estrategico():
         name_column_header=settings.get("MAP_COLUMN_HEADER", "ENDEREÇO"),
     )
 
+    logger.info("MAPA ATUALIZADO")
+
     with st.container():
 
         # INCLUINDO O MAPA NO APP
@@ -165,10 +212,9 @@ def load_page_plan_estrategico():
                                 height=500)
 
         # OBTENDO O DATAFRAME
-        dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(data=df_planejamento,
-                                                      style=settings.get(
-                                                          "OPTION_DATAFRAME_EXPLORER",
-                                                          "aggrid_default"))
+        dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(data=st.session_state["selected_df"],
+                                                                               style=settings.get("OPTION_DATAFRAME_EXPLORER",
+                                                                                                  "aggrid_default"))
 
         if dataframe_explorer_type in ["agstyle", "aggrid_default"]:
 
@@ -181,9 +227,15 @@ def load_page_plan_estrategico():
             # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
             st.session_state["selected_df"] = dataframe_return
 
-        if not st.session_state["selected_df"].equals(st.session_state["current_map_df"]):
+        print(len(st.session_state["selected_df"]))
+        print(len(st.session_state["current_map_df"]))
+        print(validator_rerun)
+
+        if not compare_dataframes(df1=st.session_state["selected_df"],
+                                  df2=st.session_state["current_map_df"]):
             # REALIZAR NOVO REFRESH NA PÁGINA
-            st.experimental_rerun()
+            logger.info("ENTROU")
+            #st.experimental_rerun()
 
         st.text("Foram selecionados {} agências".format(
             len(st.session_state["selected_df"])))
