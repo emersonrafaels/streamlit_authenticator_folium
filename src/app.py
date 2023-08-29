@@ -6,25 +6,23 @@ from app_pages import page_agencias, page_plan_estrategico
 
 # CONFIGURANDO O APP
 st.set_page_config(
-    page_title=settings.get("APPNAME_TITLE",
-                            "FOOTPRINT - PLANEJAMENTO ESTRATÉGICO"),
-    page_icon=settings.get("APPNAME_TITLE_ICON",
-                            ":world-map:"),
+    page_title=settings.get("APPNAME_TITLE", "FOOTPRINT - PLANEJAMENTO ESTRATÉGICO"),
+    page_icon=settings.get("APPNAME_TITLE_ICON", ":world-map:"),
     layout="wide",
 )
 
-def main(authenticator, username):
 
+def main(authenticator, username):
     # APLICANDO O STYLE CSS
-    st.markdown('<style>.css-1v0mbdj.ebxwdo61{margin-left: 0px;}</style>',
-                unsafe_allow_html=True)
+    st.markdown(
+        "<style>.css-1v0mbdj.ebxwdo61{margin-left: 0px;}</style>",
+        unsafe_allow_html=True,
+    )
 
     # VERIFICANDO SE O USUÁRIO ESTÁ AUTENTICADO
     if st.session_state.get("authentication_status"):
-
         # VERIFICANDO SE O USUÁRIO CONSTA CORRETAMENTE NA LISTA DE USERNAMES
         if username in st.session_state["users"]["usernames"]:
-
             # OBTENDO AS INFOS DO USUÁRIO LOGADO
             infos_username_log = st.session_state["users"]["usernames"][username]
 

@@ -105,7 +105,6 @@ def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):
 
 
 def compare_dataframes(df1, df2):
-
     # FILTRANDO NULOS EM AMBOS DATAFRAMES
     df1_fill = df1.fillna("")
     df2_fill = df2.fillna("")

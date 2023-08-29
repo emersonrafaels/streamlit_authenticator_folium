@@ -26,6 +26,15 @@ DIR_SAVE_RESULT = "resultados/RESULTADO_ESTRATEGICO.xlsx"
 LIST_OPTIONS_DATAFRAME_EXPLORER = ["agstyle", "aggrid_default", "dataframe_explorer"]
 OPTION_DATAFRAME_EXPLORER = "dataframe_explorer"
 
+# COLUNAS DE FILTRO
+COLUMN_MERCADO = "MERCADO"
+FILTRO_MERCADO_VALUE_DEFAULT = "Todos"
+COLUMN_REGIAO = "REGIÃO"
+FILTRO_REGIAO_VALUE_DEFAULT = "Todas"
+COLUMN_SUPT = "SUPT"
+FILTRO_SUPT_VALUE_DEFAULT = "Todas"
+
+
 # MAPA
 MAP_ICON_DEFALT = "assets/itau.png"
 MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelho.png", "AMARELA"="assets/itau_amarelo.png", "VERDE"="assets/itau_verde.png"}

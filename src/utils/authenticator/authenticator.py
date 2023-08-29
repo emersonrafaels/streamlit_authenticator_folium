@@ -159,7 +159,11 @@ class Authenticate:
 
         if self.username in self.credentials["usernames"]:
             try:
-                print("USUÁRIO CORRETO - AUTENTICAÇÃO DO PASSWORD: {}".format(self._check_pw()))
+                print(
+                    "USUÁRIO CORRETO - AUTENTICAÇÃO DO PASSWORD: {}".format(
+                        self._check_pw()
+                    )
+                )
                 if self._check_pw():
                     if inplace:
                         st.session_state["name"] = self.credentials["usernames"][
@@ -202,7 +206,6 @@ class Authenticate:
         location_image="main",
         position_image="center",
     ) -> tuple:
-
         """
         Creates a login widget.
 

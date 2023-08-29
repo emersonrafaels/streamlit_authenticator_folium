@@ -14,20 +14,19 @@ from utils.authenticator.read_credentials import read_credentials_excel
 
 
 def get_credentials():
-
     """
 
-        FUNÇÃO PARA OBTER AUXILIAR
-        A VERIFICAÇÃO DE CREDENCIAL
-        DE UM USUÁRIO AO TENTAR
-        LOGAR NO APP
+    FUNÇÃO PARA OBTER AUXILIAR
+    A VERIFICAÇÃO DE CREDENCIAL
+    DE UM USUÁRIO AO TENTAR
+    LOGAR NO APP
 
-        # Arguments
+    # Arguments
 
-        # Returns
-            authenticator          - Required: Retorna as configurações e
-                                               credenciais para funcionamento
-                                               da autenticação (stauth)
+    # Returns
+        authenticator          - Required: Retorna as configurações e
+                                           credenciais para funcionamento
+                                           da autenticação (stauth)
 
     """
 
@@ -56,44 +55,42 @@ def get_credentials():
 
 
 def main_authenticator():
-
     """
 
-        FUNÇÃO QUE ORQUESTRA A AUTENTICAÇÃO
+    FUNÇÃO QUE ORQUESTRA A AUTENTICAÇÃO
 
-        # Arguments
+    # Arguments
 
-        # Returns
+    # Returns
 
     """
 
     # APLICANDO O STYLE CSS
     if path.exists(settings.get("STYLES_CSS")):
         with open(settings.get("STYLES_CSS")) as f:
-            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
     # OBTENDO AS CREDENCIAIS
     logger.info("OBTENDO AS CREDENCIAIS")
     authenticator = get_credentials()
 
     if not st.session_state.get("authentication_status"):
-
         logger.info("CRIANDO TELA DE LOGIN")
 
         # OBTENDO OS USUÁRIOS
         st.session_state["users"] = authenticator.credentials
 
         # OBTENDO O DIRETÓRIO DO LOGO
-        dir_logo = str(Path(Path(__file__).absolute().parent,
-                            settings.LOGO_APP))
+        dir_logo = str(Path(Path(__file__).absolute().parent, settings.LOGO_APP))
 
         # CODIFICANDO A IMAGEM EM BASE64
         dir_logo = base64.b64encode(open(dir_logo, "rb").read())
 
         # CRIANDO O WIDGET DE LOGIN
         name, authentication_status, username = authenticator.login(
-            form_name=settings.get("APPNAME_TELA_LOGIN",
-                                   "APP - PLANEJAMENTO ESTRATÉGICO"),
+            form_name=settings.get(
+                "APPNAME_TELA_LOGIN", "APP - PLANEJAMENTO ESTRATÉGICO"
+            ),
             location="main",
             form_name_username=settings.get("FORM_NAME_USERNAME", "Email"),
             form_name_password=settings.get("FORM_NAME_PASSWORD", "Senha"),
@@ -108,8 +105,9 @@ def main_authenticator():
     # VERIFICANDO SE O USER E O PASSWORD ESTÃO CORRETOS
     if st.session_state.get("authentication_status"):
         logger.debug(
-            "LOGIN REALIZADO POR: NOME: {} - USERNAME: {}".format(st.session_state["name"],
-                                                                  st.session_state["username"])
+            "LOGIN REALIZADO POR: NOME: {} - USERNAME: {}".format(
+                st.session_state["name"], st.session_state["username"]
+            )
         )
 
         # ENTRANDO NO APP

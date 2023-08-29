@@ -39,7 +39,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
 
     with modification_container:
         to_filter_columns = st.multiselect(
-            "Filter dataframe on",
+            "Filtar dados usando a coluna",
             df.columns,
             key=f"{random_key_base}_multiselect",
         )
@@ -50,7 +50,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
             if is_categorical_dtype(df[column]) or df[column].nunique() < 10:
                 left.write("↳")
                 filters[column] = right.multiselect(
-                    f"Values for {column}",
+                    f"Valores para a coluna: {column}",
                     df[column].unique(),
                     default=list(df[column].unique()),
                     key=f"{random_key_base}_{column}",
@@ -62,7 +62,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
                 _max = float(df[column].max())
                 step = (_max - _min) / 100
                 filters[column] = right.slider(
-                    f"Values for {column}",
+                    f"Valores para a coluna: {column}",
                     _min,
                     _max,
                     (_min, _max),
@@ -73,7 +73,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
             elif is_datetime64_any_dtype(df[column]):
                 left.write("↳")
                 filters[column] = right.date_input(
-                    f"Values for {column}",
+                    f"Valores para a coluna: {column}",
                     value=(
                         df[column].min(),
                         df[column].max(),
@@ -87,7 +87,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
             else:
                 left.write("↳")
                 filters[column] = right.text_input(
-                    f"Pattern in {column}",
+                    f"Padrão de busca para a coluna: {column}",
                     key=f"{random_key_base}_{column}",
                 )
                 if filters[column]:

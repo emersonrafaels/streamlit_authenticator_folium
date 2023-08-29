@@ -7,7 +7,11 @@ from dynaconf import settings
 from streamlit_folium import folium_static
 from loguru import logger
 
-from utils.pandas_functions import load_data, convert_dataframe_to_aggrid, compare_dataframes
+from utils.pandas_functions import (
+    load_data,
+    convert_dataframe_to_aggrid,
+    compare_dataframes,
+)
 from utils.agstyler import draw_grid
 from utils.map.map_functions import load_map, download_folium_map
 from utils.dataframe_explorer import dataframe_explorer
@@ -16,7 +20,6 @@ dir_root = Path(__file__).absolute().parent.parent
 
 
 def __save_action__(data, ag_selected, action_selected):
-
     # OBTENDO A COLUNA PARA SALVAR AS AÇÕES
     col_save_action = settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
 
@@ -26,20 +29,23 @@ def __save_action__(data, ag_selected, action_selected):
         data[col_save_action] = ""
 
     logger.info(
-        "SALVANDO AÇÃO: AGÊNCIA: {} - ESTRATÉGIA: {}".format(ag_selected,
-                                                             action_selected))
+        "SALVANDO AÇÃO: AGÊNCIA: {} - ESTRATÉGIA: {}".format(
+            ag_selected, action_selected
+        )
+    )
 
     # SALVANDO A ESTRATÉGIA PARA A AGÊNCIA
-    data.loc[data[settings.get("COLUMN_NUM_AGENCIA",  "CÓDIGO AG")] == ag_selected,
-             col_save_action] = action_selected
+    data.loc[
+        data[settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")] == ag_selected,
+        col_save_action,
+    ] = action_selected
 
     # SALVANDO NO OBJETO GLOBAL
     st.session_state["df_planejamento"] = data
 
+
 def convert_dataframe_explorer(data, style):
-
-    if style == 'agstyle':
-
+    if style == "agstyle":
         formatter = None
         css = None
 
@@ -47,65 +53,159 @@ def convert_dataframe_explorer(data, style):
             data,
             formatter=formatter,
             fit_columns=True,
-            selection='multiple',  # or 'single', or None
+            selection="multiple",  # or 'single', or None
             use_filterable=True,  # or False by default
             use_groupable=True,
             use_checkbox=True,
             validator_all_rows_selected=True,
             validator_enable_enterprise_modules=True,
-            theme='streamlit',
+            theme="streamlit",
             max_height=300,
             css=css,
         )
 
     elif style == "aggrid_default":
-
-        return style, convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
+        return style, convert_dataframe_to_aggrid(
+            data=data, validator_all_rows_selected=True
+        )
 
     elif style == "dataframe_explorer":
-
-        return style, dataframe_explorer(data,
-                                         case=False)
+        return style, dataframe_explorer(data, case=False)
 
     else:
         logger.warning("OPÇÃO NÃO VÁLIDA - {}".format(stack()[0][3]))
 
-        return style, convert_dataframe_to_aggrid(data=data, validator_all_rows_selected=True)
+        return style, convert_dataframe_to_aggrid(
+            data=data, validator_all_rows_selected=True
+        )
 
 
 def __save_excel__(data):
+    """
+
+    SALVA O DATAFRAME ATUAL
+
+    COMO O DATAFRAME É ATUALIZADO
+    COM AS AÇÕES DO USÁRIO
+    ESSE DATAFRAME REPRESENTA AS
+    ESTRATÉGIAS ADOTADAS
+
+    # Arguments
+        data            - Required: Dados em tela (DataFrame)
+
+    # Returns
 
     """
 
-        SALVA O DATAFRAME ATUAL
-
-        COMO O DATAFRAME É ATUALIZADO
-        COM AS AÇÕES DO USÁRIO
-        ESSE DATAFRAME REPRESENTA AS
-        ESTRATÉGIAS ADOTADAS
-
-        # Arguments
-            data            - Required: Dados em tela (DataFrame)
-
-        # Returns
-
-    """
-
-    dir_save = str(Path(dir_root,
-                    settings.get("DIR_SAVE_RESULT",
-                                 "resultados/RESULTADO_ESTRATEGICO")))
+    dir_save = str(
+        Path(
+            dir_root,
+            settings.get("DIR_SAVE_RESULT", "resultados/RESULTADO_ESTRATEGICO"),
+        )
+    )
 
     # SALVANDO OS DADOS
     data.to_excel(dir_save, index=False)
 
     logger.info("DADOS SALVOS COM SUCESSO EM: {}".format(dir_save))
 
-def load_page_plan_estrategico():
+
+def get_dataframe_filter(dataframe, filtro_mercado, filtro_regiao, filtro_supt):
+    try:
+        logger.info(
+            "INICIANDO FILTROS - DATAFRAME COM {} VALORES".format(len(dataframe))
+        )
+        logger.info("APLICANDO FILTRO DE MERCADO: {} - REGIAO: {} - SUPT: {}".format(filtro_mercado,
+                                                                                     filtro_regiao,
+                                                                                     filtro_supt))
+
+        # APLICANDO FILTROS - MERCADO
+        if settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos") not in filtro_mercado:
+            dataframe = dataframe[
+                dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].isin(
+                    filtro_mercado
+                )
+            ]
+
+        logger.info(
+            "FILTRO DE MERCADO - {} - APÓS O FILTRO - DATAFRAME COM {} VALORES".format(
+                settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos"), len(dataframe)
+            )
+        )
+
+        # APLICANDO FILTROS - REGIÃO
+        if settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas") not in filtro_regiao:
+            dataframe = dataframe[
+                dataframe[settings.get("COLUMN_REGIAO", "REGIAO")].isin(filtro_regiao)
+            ]
+
+        logger.info(
+            "FILTRO DE REGIÃO - {} - APÓS O FILTRO - DATAFRAME COM {} VALORES".format(
+                settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas"), len(dataframe)
+            )
+        )
+
+        # APLICANDO FILTROS - SUPT
+        if settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas") not in filtro_supt:
+            dataframe = dataframe[
+                dataframe[settings.get("COLUMN_SUPT", "SUPT")].isin(filtro_supt)
+            ]
+
+        logger.info(
+            "FILTRO DE SUPT - {} - APÓS O FILTRO - DATAFRAME COM {} VALORES".format(
+                settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas"), len(dataframe)
+            )
+        )
+
+    except Exception as ex:
+        logger.error("ERRO NA FUNÇÃO - {} - {}".format(stack()[0][3], ex))
+
+    return dataframe
+
+def redefine_filtros(multiselect_change, key):
 
     """
 
-        DATAFRAME ORIGINAL - st.session_state["df_planejamento"] = df_planejamento
-        DATAFRAME SELECIONADO - st.session_state["selected_df"]
+        APÓS QUALQUER MUDANÇA NOS BOTÕES DE FILTRO (on_change)
+        ATUALIZA OS VALORES DO SESSION_STATE
+        PARA O RESPECTIVO BOTÃO
+
+        # Arguments
+            multiselect_change          - Required: Chave do session
+                                                    state para ser atualizado (String)
+            key                         - Required: Valores para atualização (String)
+
+    """
+
+    # DEFININDO OS VALORES PARA O FILTRO SELECIONADO
+    st.session_state[multiselect_change] = st.session_state[key]
+
+
+def redefine_filtros_default():
+
+    """
+
+        DEFININDO O VALOR PARA OS FILTROS
+        VALORES DEFAULT
+
+    """
+
+    st.session_state["filtro_mercado"] = settings.get(
+        "FILTRO_MERCADO_VALUE_DEFAULT", "Todos"
+    )
+    st.session_state["filtro_regiao"] = settings.get(
+        "FILTRO_REGIAO_VALUE_DEFAULT", "Todos"
+    )
+    st.session_state["filtro_supt"] = settings.get(
+        "FILTRO_SUPT_VALUE_DEFAULT", "Todos"
+    )
+
+
+def load_page_plan_estrategico():
+    """
+
+    DATAFRAME ORIGINAL - st.session_state["df_planejamento"] = df_planejamento
+    DATAFRAME SELECIONADO - st.session_state["selected_df"]
 
     """
 
@@ -113,7 +213,6 @@ def load_page_plan_estrategico():
     validator_rerun = True
 
     if "df_planejamento" not in st.session_state.keys():
-
         # CARREGANDO DATAFRAME
         df_planejamento = load_data(
             data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
@@ -124,16 +223,23 @@ def load_page_plan_estrategico():
         st.session_state["df_planejamento"] = df_planejamento
 
     else:
-        logger.info("df_planejamento - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(len(st.session_state["df_planejamento"])))
+        logger.info(
+            "df_planejamento - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(
+                len(st.session_state["df_planejamento"])
+            )
+        )
         df_planejamento = st.session_state["df_planejamento"]
 
     if "selected_df" not in st.session_state.keys():
-
         # CARREGANDO DATAFRAME
         st.session_state["selected_df"] = st.session_state["df_planejamento"]
 
     else:
-        logger.info("selected_df - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(len(st.session_state["selected_df"])))
+        logger.info(
+            "selected_df - DADOS RECUPERADOS DO SESSION STATE COM SUCESSO - {} AGÊNCIAS".format(
+                len(st.session_state["selected_df"])
+            )
+        )
 
     # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
@@ -142,50 +248,86 @@ def load_page_plan_estrategico():
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
 
-    select_column1, select_column2, select_column3 = st.columns(3)
+    select_column1, select_column2, select_column3, select_column4 = st.columns(4)
 
     # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
-    lista_mercados = list(
-        st.session_state["df_planejamento"]["MERCADO"].unique())
-    lista_regioes = list(st.session_state["df_planejamento"]["REGIÃO"].unique())
-    lista_supt = list(st.session_state["df_planejamento"]["SUPT"].unique())
-
-    logger.info(lista_mercados)
-    logger.info(lista_regioes)
-    logger.info(lista_supt)
+    lista_mercados = [settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_MERCADO", "MERCADO")
+        ].unique()
+    )
+    lista_regioes = [settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_REGIAO", "REGIÃO")
+        ].unique()
+    )
+    lista_supt = [settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_SUPT", "SUPT")
+        ].unique()
+    )
 
     # CRIANDO O SELECT BOX DE MERCADO
-    filtro_mercado = select_column1.selectbox(label="Mercado",
-                                              options=lista_mercados,
-                                              help="Selecione o mercado desejado")
+    st.session_state["filtro_mercado"] = select_column1.multiselect(
+        label="Mercado",
+        options=lista_mercados,
+        default=st.session_state["filtro_mercado"]
+        if "filtro_mercado" in st.session_state.keys()
+        else settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos"),
+        help="Selecione o mercado desejado",
+        key="filtro_mercado_selection",
+        on_change=redefine_filtros,
+        args=("filtro_mercado", "filtro_mercado_selection"),
+    )
 
-    filtro_regiao = select_column2.selectbox(label="Região",
-                                  options=lista_regioes,
-                                  help="Selecione a região desejada")
+    st.session_state["filtro_regiao"] = select_column2.multiselect(
+        label="Região",
+        options=lista_regioes,
+        default=st.session_state["filtro_regiao"]
+        if "filtro_regiao" in st.session_state.keys()
+        else settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas"),
+        help="Selecione a região desejada",
+        key="filtro_regiao_selection",
+        on_change=redefine_filtros,
+        args=("filtro_regiao", "filtro_regiao_selection"),
+    )
 
-    filtro_supt = select_column3.selectbox(label="Superintendência",
-                                           options=lista_supt,
-                                           help="Selecione a superintendência desejada")
+    st.session_state["filtro_supt"] = select_column3.multiselect(
+        label="Superintendência",
+        options=lista_supt,
+        default=st.session_state["filtro_supt"]
+        if "filtro_supt" in st.session_state.keys()
+        else settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas"),
+        help="Selecione a superintendência desejada",
+        key="filtro_supt_selection",
+        on_change=redefine_filtros,
+        args=("filtro_supt", "filtro_supt_selection"),
+    )
 
-    if st.sidebar.button('Redefinir Filtros'):
-        filtro_mercado = 'Todos'
-        filtro_regiao = 'Todas'
-        filtro_supt = 'Todas'
+    # CRIANDO DOIS ESPAÇOS EM BRANCO NO COLUMN4 PARA ALINHAR O BOTÃO
+    select_column4.markdown("")
+    select_column4.markdown("")
+    select_column4.button("Redefinir Filtros",
+                          on_click=redefine_filtros_default)
 
-    st.session_state["selected_df"] = []
+    print(st.session_state["filtro_mercado"],
+          st.session_state["filtro_regiao"],
+          st.session_state["filtro_supt"])
 
-    print(filtro_mercado, filtro_regiao, filtro_supt)
-
-    for dado in st.session_state["df_planejamento"]:
-        # Aplicar filtros
-        if (filtro_mercado == 'Todos' or dado['MERCADO'] == filtro_mercado) and \
-                (filtro_regiao == 'Todas' or dado[
-                    'REGIÃO'] == filtro_regiao) and \
-                (filtro_supt == 'Todas' or dado['SUPT'] == filtro_supt):
-            st.session_state["selected_df"].append(dado)
+    # SELECIONANDO OS VALORES DO DATAFRAME VIA COMBOBOX
+    st.session_state["selected_df"] = get_dataframe_filter(
+        dataframe=st.session_state["df_planejamento"],
+        filtro_mercado=st.session_state["filtro_mercado"],
+        filtro_regiao=st.session_state["filtro_regiao"],
+        filtro_supt=st.session_state["filtro_supt"],
+    )
 
     # PLOTANDO O MAPA
-    validator, st.session_state["mapobj"], st.session_state["current_map_df"] = load_map(
+    (
+        validator,
+        st.session_state["mapobj"],
+        st.session_state["current_map_df"],
+    ) = load_map(
         data=st.session_state["selected_df"],
         map_layer_default=settings.get("MAP_LAYER_DEFAULT", "openstreetmap"),
         circle_radius=0,
@@ -202,28 +344,24 @@ def load_page_plan_estrategico():
         name_column_header=settings.get("MAP_COLUMN_HEADER", "ENDEREÇO"),
     )
 
-    logger.info("MAPA ATUALIZADO")
-
     with st.container():
-
         # INCLUINDO O MAPA NO APP
-        st_data = folium_static(st.session_state["mapobj"],
-                                width=900,
-                                height=500)
+        st_data = folium_static(st.session_state["mapobj"], width=900, height=500)
 
         # OBTENDO O DATAFRAME
-        dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(data=st.session_state["selected_df"],
-                                                                               style=settings.get("OPTION_DATAFRAME_EXPLORER",
-                                                                                                  "aggrid_default"))
+        dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(
+            data=st.session_state["selected_df"],
+            style=settings.get("OPTION_DATAFRAME_EXPLORER", "aggrid_default"),
+        )
 
         if dataframe_explorer_type in ["agstyle", "aggrid_default"]:
-
             # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
-            st.session_state["selected_df"] = pd.DataFrame(dataframe_return["selected_rows"])
+            st.session_state["selected_df"] = pd.DataFrame(
+                dataframe_return["selected_rows"]
+            )
         else:
             # PLOTANDO O DATAFRAME EM TELA
-            selected_df = st.dataframe(dataframe_return,
-                                       use_container_width=True)
+            selected_df = st.dataframe(dataframe_return, use_container_width=True)
             # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
             st.session_state["selected_df"] = dataframe_return
 
@@ -231,16 +369,20 @@ def load_page_plan_estrategico():
         print(len(st.session_state["current_map_df"]))
         print(validator_rerun)
 
-        if not compare_dataframes(df1=st.session_state["selected_df"],
-                                  df2=st.session_state["current_map_df"]):
+        if not compare_dataframes(
+            df1=st.session_state["selected_df"], df2=st.session_state["current_map_df"]
+        ):
             # REALIZAR NOVO REFRESH NA PÁGINA
             logger.info("ENTROU")
-            #st.experimental_rerun()
+            # st.experimental_rerun()
 
-        st.text("Foram selecionados {} agências".format(
-            len(st.session_state["selected_df"])))
-        st.text("Mapa: {} agências".format(
-            len(st.session_state["current_map_df"])))
+        st.text(
+            "Foram selecionados {} agências".format(
+                len(st.session_state["selected_df"])
+            )
+        )
+        st.text("Mapa: {} agências".format(len(st.session_state["current_map_df"])))
+
 
 if __name__ == "__main__":
     load_page_plan_estrategico()

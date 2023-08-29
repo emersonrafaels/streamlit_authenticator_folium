@@ -15,18 +15,18 @@ from utils.generic_functions import calculate_time_usage, convert_to_number
 
 dir_root = Path(__file__).absolute().parent.parent.parent
 
-def download_folium_map(mapobj):
 
+def download_folium_map(mapobj):
     """
 
-        REALIZA O DOWNLOAD DE UM OBJETO FOLIUM (MAP)
-        EM FORMATO HTML
+    REALIZA O DOWNLOAD DE UM OBJETO FOLIUM (MAP)
+    EM FORMATO HTML
 
-        # Arguments
-            mapobj          - Required: Objeto (Map) folium para realizar download (Object)
+    # Arguments
+        mapobj          - Required: Objeto (Map) folium para realizar download (Object)
 
-        # Returns
-            processed_map   - Reqired: Mapa em formato HTML (HTML)
+    # Returns
+        processed_map   - Reqired: Mapa em formato HTML (HTML)
 
     """
 
@@ -275,9 +275,9 @@ def load_map(
 
             if validator_marker_cluster:
                 # CRIANDO O CLUSTER
-                marker_cluster = MarkerCluster(name="CLUSTER",
-                                               overlay=True,
-                                               control=True).add_to(mapobj)
+                marker_cluster = MarkerCluster(
+                    name="CLUSTER", overlay=True, control=True
+                ).add_to(mapobj)
 
                 # OS MARCADORES SÃO ADICIONADOS AO CLUSTER
                 obj_marker = marker_cluster
@@ -346,24 +346,24 @@ def load_map(
     original_data = data.copy()
 
     if column_latitude in data.columns and column_longitude in data.columns:
-
         logger.info("INICIANDO A CONSTRUÇÃO DO MAPA COM {} DADOS".format(len(data)))
 
         # GARANTINDO COLUNAS DE LATITUDE E LONGITUDE EM FORMATO FLOAT
         for column in [column_latitude, column_longitude]:
-            data[column] = data[column].apply(lambda x: convert_to_number(value_to_convert=x,
-                                                                          type=float))
+            data[column] = data[column].apply(
+                lambda x: convert_to_number(value_to_convert=x, type=float)
+            )
 
         # REMOVENDO VALORES NONE DA COLUNA DE LATITUDE E LONGITUDE
         data = data[(~data[column_latitude].isna()) & (~data[column_longitude].isna())]
 
         logger.info(
-            "APÓS VALIDAÇÃO PARA CONSTRUÇÃO DO MAPA: {} DADOS".format(len(data)))
+            "APÓS VALIDAÇÃO PARA CONSTRUÇÃO DO MAPA: {} DADOS".format(len(data))
+        )
 
         # CRIANDO O MAPA
         footprint_map = folium.Map(
-            location=[data[column_latitude].mean(),
-                      data[column_longitude].mean()],
+            location=[data[column_latitude].mean(), data[column_longitude].mean()],
             zoom_start=4,
             tiles=map_layer_default,
         )

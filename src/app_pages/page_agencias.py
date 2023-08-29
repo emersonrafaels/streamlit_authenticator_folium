@@ -9,8 +9,8 @@ from utils.pandas_functions import load_data
 
 dir_root = Path(__file__).absolute().parent.parent
 
-def load_page_agencias():
 
+def load_page_agencias():
     # INICIALIZANDO AS VARIÁVEIS AUXILIARES
     if "current_map_df" not in st.session_state.keys():
         st.session_state["current_map_df"] = pd.DataFrame()
@@ -38,10 +38,12 @@ def load_page_agencias():
 
     logger.info("{} AGÊNCIAS".format(len(df_planejamento)))
 
-    ag_selected = st.selectbox(label="Selecione uma agência",
-                               options=df_planejamento[
-                                   settings.get("COLUMN_NUM_AGENCIA",
-                                                "CÓDIGO AG")].unique(),
-                               help="Selecione o número da agência desejada")
+    ag_selected = st.selectbox(
+        label="Selecione uma agência",
+        options=df_planejamento[
+            settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")
+        ].unique(),
+        help="Selecione o número da agência desejada",
+    )
 
     st.divider()
