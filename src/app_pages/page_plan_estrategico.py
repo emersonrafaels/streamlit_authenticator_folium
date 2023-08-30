@@ -19,29 +19,34 @@ from utils.dataframe_explorer import dataframe_explorer
 dir_root = Path(__file__).absolute().parent.parent
 
 
-def __save_action__(data, ag_selected, action_selected):
+def __save_action__(data_planejamento,
+                    data_selected,
+                    ag_selected,
+                    action_selected):
+
+    print("SALVANDO ESTRATÉGIA - AGÊNCIA: {} - ESTRATÉGIA: {}".format(ag_selected, action_selected))
+
     # OBTENDO A COLUNA PARA SALVAR AS AÇÕES
     col_save_action = settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
 
     # VERIFICANDO SE A COLUNA EXISTE, CASO NÃO EXISTA
     # CRIA COLUNA PARA SALVAR A ESTRATÉGIA SELECIONADA
-    if not col_save_action in data:
-        data[col_save_action] = ""
+    for data in [data_planejamento, data_selected]:
 
-    logger.info(
-        "SALVANDO AÇÃO: AGÊNCIA: {} - ESTRATÉGIA: {}".format(
-            ag_selected, action_selected
+        if not col_save_action in data:
+            data[col_save_action] = ""
+
+        logger.info(
+            "SALVANDO AÇÃO: AGÊNCIA: {} - ESTRATÉGIA: {}".format(
+                ag_selected, action_selected
+            )
         )
-    )
 
-    # SALVANDO A ESTRATÉGIA PARA A AGÊNCIA
-    data.loc[
-        data[settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")] == ag_selected,
-        col_save_action,
-    ] = action_selected
-
-    # SALVANDO NO OBJETO GLOBAL
-    st.session_state["df_planejamento"] = data
+        # SALVANDO A ESTRATÉGIA PARA A AGÊNCIA
+        data.loc[
+            data[settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")] == ag_selected,
+            col_save_action,
+        ] = action_selected
 
 
 def convert_dataframe_explorer(data, style):
@@ -182,8 +187,6 @@ def redefine_filtros(dataframe, multiselect_change, key):
     # DEFININDO OS VALORES PARA O FILTRO SELECIONADO
     st.session_state[multiselect_change] = st.session_state[key]
 
-    print(dataframe)
-
     # DEFININDO OS VALORES PARA OS OUTROS FILTROS
     if multiselect_change == "filtro_mercado" and st.session_state[key]:
         dataframe = dataframe[
@@ -201,7 +204,9 @@ def redefine_filtros(dataframe, multiselect_change, key):
             settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
         ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
 
-        print(st.session_state["list_regioes"], st.session_state["list_supt"])
+        # ATUALIZANDO O FILTRO DEFAULT
+        st.session_state["filtro_regiao"] = st.session_state["list_regioes"][0]
+        st.session_state["filtro_supt"] = st.session_state["list_supt"][0]
 
     elif multiselect_change == "filtro_regiao" and st.session_state[key]:
         dataframe = dataframe[
@@ -219,7 +224,9 @@ def redefine_filtros(dataframe, multiselect_change, key):
             settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
         ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
 
-        print(st.session_state["list_mercados"], st.session_state["list_supt"])
+        # ATUALIZANDO O FILTRO DEFAULT
+        st.session_state["filtro_mercado"] = st.session_state["list_mercados"][0]
+        st.session_state["filtro_supt"] = st.session_state["list_supt"][0]
 
 
 def redefine_filtros_default():
@@ -471,6 +478,40 @@ def load_page_plan_estrategico():
             )
         )
         st.text("Mapa: {} agências".format(len(st.session_state["current_map_df"])))
+
+    # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
+    with st.container():
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            ag_selected = st.selectbox(
+                label="Agência",
+                options=df_planejamento[
+                    settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")
+                ].unique(),
+                help="Selecione o número da agência desejada",
+            )
+        with col2:
+            ag_action = st.selectbox(
+                label="Estratégia",
+                options=settings.get(
+                    "OPTIONS_ESTRATEGIA",
+                    ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]
+                ),
+                help="Selecione a estratégia desejada para a agência",
+            )
+
+        with col3:
+            st.markdown("")
+            st.markdown("")
+            bt_action = st.button(
+                label="Aplicar estratégia",
+                help="Ao clicar no botão, os dados serão salvos na atualizados",
+                on_click=__save_action__,
+                args=(st.session_state["df_planejamento"],
+                      st.session_state["selected_df"],
+                      ag_selected,
+                      ag_action),
+            )
 
 
 if __name__ == "__main__":
