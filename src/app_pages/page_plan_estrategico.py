@@ -115,9 +115,11 @@ def get_dataframe_filter(dataframe, filtro_mercado, filtro_regiao, filtro_supt):
         logger.info(
             "INICIANDO FILTROS - DATAFRAME COM {} VALORES".format(len(dataframe))
         )
-        logger.info("APLICANDO FILTRO DE MERCADO: {} - REGIAO: {} - SUPT: {}".format(filtro_mercado,
-                                                                                     filtro_regiao,
-                                                                                     filtro_supt))
+        logger.info(
+            "APLICANDO FILTRO DE MERCADO: {} - REGIAO: {} - SUPT: {}".format(
+                filtro_mercado, filtro_regiao, filtro_supt
+            )
+        )
 
         # APLICANDO FILTROS - MERCADO
         if settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos") not in filtro_mercado:
@@ -162,43 +164,106 @@ def get_dataframe_filter(dataframe, filtro_mercado, filtro_regiao, filtro_supt):
 
     return dataframe
 
-def redefine_filtros(multiselect_change, key):
 
+def redefine_filtros(dataframe, multiselect_change, key):
     """
 
-        APÓS QUALQUER MUDANÇA NOS BOTÕES DE FILTRO (on_change)
-        ATUALIZA OS VALORES DO SESSION_STATE
-        PARA O RESPECTIVO BOTÃO
+    APÓS QUALQUER MUDANÇA NOS BOTÕES DE FILTRO (on_change)
+    ATUALIZA OS VALORES DO SESSION_STATE
+    PARA O RESPECTIVO BOTÃO
 
-        # Arguments
-            multiselect_change          - Required: Chave do session
-                                                    state para ser atualizado (String)
-            key                         - Required: Valores para atualização (String)
+    # Arguments
+        multiselect_change          - Required: Chave do session
+                                                state para ser atualizado (String)
+        key                         - Required: Valores para atualização (String)
 
     """
 
     # DEFININDO OS VALORES PARA O FILTRO SELECIONADO
     st.session_state[multiselect_change] = st.session_state[key]
 
+    print(dataframe)
+
+    # DEFININDO OS VALORES PARA OS OUTROS FILTROS
+    if multiselect_change == "filtro_mercado" and st.session_state[key]:
+        dataframe = dataframe[
+            dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].isin(
+                st.session_state[key]
+            )
+        ]
+
+        # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
+        st.session_state["list_regioes"] = [
+            settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")
+        ] + list(dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].unique())
+
+        st.session_state["list_supt"] = [
+            settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+        ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
+
+        print(st.session_state["list_regioes"], st.session_state["list_supt"])
+
+    elif multiselect_change == "filtro_regiao" and st.session_state[key]:
+        dataframe = dataframe[
+            dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].isin(
+                st.session_state[key]
+            )
+        ]
+
+        # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
+        st.session_state["list_mercados"] = [
+            settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")
+        ] + list(dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].unique())
+
+        st.session_state["list_supt"] = [
+            settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+        ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
+
+        print(st.session_state["list_mercados"], st.session_state["list_supt"])
+
 
 def redefine_filtros_default():
+    """
+
+    DEFININDO O VALOR PARA OS FILTROS
+    VALORES DEFAULT
 
     """
 
-        DEFININDO O VALOR PARA OS FILTROS
-        VALORES DEFAULT
+    # ATUALIZANDO TODAS AS OPÇÕES
+    # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
+    st.session_state["list_mercados"] = [
+        settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")
+    ] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_MERCADO", "MERCADO")
+        ].unique()
+    )
 
-    """
+    st.session_state["list_regioes"] = [
+        settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")
+    ] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_REGIAO", "REGIÃO")
+        ].unique()
+    )
 
+    st.session_state["list_supt"] = [
+        settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+    ] + list(
+        st.session_state["df_planejamento"][
+            settings.get("COLUMN_SUPT", "SUPT")
+        ].unique()
+    )
+
+    # DEFININDO O VALOR DEFAULT
     st.session_state["filtro_mercado"] = settings.get(
         "FILTRO_MERCADO_VALUE_DEFAULT", "Todos"
     )
     st.session_state["filtro_regiao"] = settings.get(
         "FILTRO_REGIAO_VALUE_DEFAULT", "Todos"
     )
-    st.session_state["filtro_supt"] = settings.get(
-        "FILTRO_SUPT_VALUE_DEFAULT", "Todos"
-    )
+    st.session_state["filtro_supt"] = settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todos")
 
 
 def load_page_plan_estrategico():
@@ -241,6 +306,34 @@ def load_page_plan_estrategico():
             )
         )
 
+    if "list_mercados" not in st.session_state.keys():
+        # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
+        st.session_state["list_mercados"] = [
+            settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")
+        ] + list(
+            st.session_state["df_planejamento"][
+                settings.get("COLUMN_MERCADO", "MERCADO")
+            ].unique()
+        )
+
+    if "list_regioes" not in st.session_state.keys():
+        st.session_state["list_regioes"] = [
+            settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")
+        ] + list(
+            st.session_state["df_planejamento"][
+                settings.get("COLUMN_REGIAO", "REGIÃO")
+            ].unique()
+        )
+
+    if "list_supt" not in st.session_state.keys():
+        st.session_state["list_supt"] = [
+            settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+        ] + list(
+            st.session_state["df_planejamento"][
+                settings.get("COLUMN_SUPT", "SUPT")
+            ].unique()
+        )
+
     # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
     st.markdown("# APP - PLANEJAMENTO ESTRATÉGICO")
@@ -250,69 +343,65 @@ def load_page_plan_estrategico():
 
     select_column1, select_column2, select_column3, select_column4 = st.columns(4)
 
-    # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
-    lista_mercados = [settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")] + list(
-        st.session_state["df_planejamento"][
-            settings.get("COLUMN_MERCADO", "MERCADO")
-        ].unique()
-    )
-    lista_regioes = [settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")] + list(
-        st.session_state["df_planejamento"][
-            settings.get("COLUMN_REGIAO", "REGIÃO")
-        ].unique()
-    )
-    lista_supt = [settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")] + list(
-        st.session_state["df_planejamento"][
-            settings.get("COLUMN_SUPT", "SUPT")
-        ].unique()
-    )
-
     # CRIANDO O SELECT BOX DE MERCADO
     st.session_state["filtro_mercado"] = select_column1.multiselect(
         label="Mercado",
-        options=lista_mercados,
+        options=st.session_state["list_mercados"],
         default=st.session_state["filtro_mercado"]
         if "filtro_mercado" in st.session_state.keys()
         else settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos"),
         help="Selecione o mercado desejado",
         key="filtro_mercado_selection",
         on_change=redefine_filtros,
-        args=("filtro_mercado", "filtro_mercado_selection"),
+        args=(
+            st.session_state["df_planejamento"],
+            "filtro_mercado",
+            "filtro_mercado_selection",
+        ),
     )
 
     st.session_state["filtro_regiao"] = select_column2.multiselect(
         label="Região",
-        options=lista_regioes,
+        options=st.session_state["list_regioes"],
         default=st.session_state["filtro_regiao"]
         if "filtro_regiao" in st.session_state.keys()
         else settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas"),
         help="Selecione a região desejada",
         key="filtro_regiao_selection",
         on_change=redefine_filtros,
-        args=("filtro_regiao", "filtro_regiao_selection"),
+        args=(
+            st.session_state["df_planejamento"],
+            "filtro_regiao",
+            "filtro_regiao_selection",
+        ),
     )
 
     st.session_state["filtro_supt"] = select_column3.multiselect(
         label="Superintendência",
-        options=lista_supt,
+        options=st.session_state["list_supt"],
         default=st.session_state["filtro_supt"]
         if "filtro_supt" in st.session_state.keys()
         else settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas"),
         help="Selecione a superintendência desejada",
         key="filtro_supt_selection",
         on_change=redefine_filtros,
-        args=("filtro_supt", "filtro_supt_selection"),
+        args=(
+            st.session_state["df_planejamento"],
+            "filtro_supt",
+            "filtro_supt_selection",
+        ),
     )
 
     # CRIANDO DOIS ESPAÇOS EM BRANCO NO COLUMN4 PARA ALINHAR O BOTÃO
     select_column4.markdown("")
     select_column4.markdown("")
-    select_column4.button("Redefinir Filtros",
-                          on_click=redefine_filtros_default)
+    select_column4.button("Redefinir Filtros", on_click=redefine_filtros_default)
 
-    print(st.session_state["filtro_mercado"],
-          st.session_state["filtro_regiao"],
-          st.session_state["filtro_supt"])
+    print(
+        st.session_state["filtro_mercado"],
+        st.session_state["filtro_regiao"],
+        st.session_state["filtro_supt"],
+    )
 
     # SELECIONANDO OS VALORES DO DATAFRAME VIA COMBOBOX
     st.session_state["selected_df"] = get_dataframe_filter(
