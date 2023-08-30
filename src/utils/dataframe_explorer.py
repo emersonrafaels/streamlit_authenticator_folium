@@ -39,7 +39,7 @@ def dataframe_explorer(df: pd.DataFrame, case: bool = True) -> pd.DataFrame:
 
     with modification_container:
         to_filter_columns = st.multiselect(
-            "Filtar dados usando a coluna",
+            "Filtrar dados usando a coluna",
             df.columns,
             key=f"{random_key_base}_multiselect",
         )

@@ -179,47 +179,67 @@ def redefine_filtros(dataframe, multiselect_change, key):
 
     """
 
-    # DEFININDO OS VALORES PARA O FILTRO SELECIONADO
-    st.session_state[multiselect_change] = st.session_state[key]
+    if multiselect_change == "dataframe":
+        # ATUALIZANDO TODAS AS OPÇÕES
+        # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
+        st.session_state["list_mercados"] = list(
+            dataframe[
+                settings.get("COLUMN_MERCADO", "MERCADO")
+            ].unique()
+        )
 
-    print(dataframe)
+        st.session_state["list_regioes"] = list(
+            dataframe[
+                settings.get("COLUMN_REGIAO", "REGIÃO")
+            ].unique()
+        )
 
-    # DEFININDO OS VALORES PARA OS OUTROS FILTROS
-    if multiselect_change == "filtro_mercado" and st.session_state[key]:
-        dataframe = dataframe[
-            dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].isin(
-                st.session_state[key]
-            )
-        ]
+        st.session_state["list_supt"] = list(
+            dataframe[
+                settings.get("COLUMN_SUPT", "SUPT")
+            ].unique()
+        )
 
-        # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
-        st.session_state["list_regioes"] = [
-            settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")
-        ] + list(dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].unique())
+    else:
+        # DEFININDO OS VALORES PARA O FILTRO SELECIONADO
+        st.session_state[multiselect_change] = st.session_state[key]
 
-        st.session_state["list_supt"] = [
-            settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
-        ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
+        # DEFININDO OS VALORES PARA OS OUTROS FILTROS
+        if multiselect_change == "filtro_mercado" and st.session_state[key]:
+            dataframe = dataframe[
+                dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].isin(
+                    st.session_state[key]
+                )
+            ]
 
-        print(st.session_state["list_regioes"], st.session_state["list_supt"])
+            # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
+            st.session_state["list_regioes"] = [
+                settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas")
+            ] + list(dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].unique())
 
-    elif multiselect_change == "filtro_regiao" and st.session_state[key]:
-        dataframe = dataframe[
-            dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].isin(
-                st.session_state[key]
-            )
-        ]
+            st.session_state["list_supt"] = [
+                settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+            ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
 
-        # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
-        st.session_state["list_mercados"] = [
-            settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")
-        ] + list(dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].unique())
+            print(st.session_state["list_regioes"], st.session_state["list_supt"])
 
-        st.session_state["list_supt"] = [
-            settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
-        ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
+        elif multiselect_change == "filtro_regiao" and st.session_state[key]:
+            dataframe = dataframe[
+                dataframe[settings.get("COLUMN_REGIAO", "REGIÃO")].isin(
+                    st.session_state[key]
+                )
+            ]
 
-        print(st.session_state["list_mercados"], st.session_state["list_supt"])
+            # ATUALIZANDO OS VALORES POSSIVEIS PARA OS CAMPOS REGIÃO E SUPT
+            st.session_state["list_mercados"] = [
+                settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos")
+            ] + list(dataframe[settings.get("COLUMN_MERCADO", "MERCADO")].unique())
+
+            st.session_state["list_supt"] = [
+                settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas")
+            ] + list(dataframe[settings.get("COLUMN_SUPT", "SUPT")].unique())
+
+            print(st.session_state["list_mercados"], st.session_state["list_supt"])
 
 
 def redefine_filtros_default():
@@ -229,6 +249,9 @@ def redefine_filtros_default():
     VALORES DEFAULT
 
     """
+
+    # REINICIANDO O DATAFRAME
+    st.session_state["selected_df"] = st.session_state["df_planejamento"]
 
     # ATUALIZANDO TODAS AS OPÇÕES
     # OBTENDO TODOS OS MERCADOS, REGIÕES E SUPT
@@ -347,7 +370,7 @@ def load_page_plan_estrategico():
     st.session_state["filtro_mercado"] = select_column1.multiselect(
         label="Mercado",
         options=st.session_state["list_mercados"],
-        default=st.session_state["filtro_mercado"]
+        default=st.session_state.get("filtro_mercado") if st.session_state.get("filtro_mercado") in st.session_state["list_mercados"] else st.session_state["list_mercados"][0]
         if "filtro_mercado" in st.session_state.keys()
         else settings.get("FILTRO_MERCADO_VALUE_DEFAULT", "Todos"),
         help="Selecione o mercado desejado",
@@ -363,7 +386,7 @@ def load_page_plan_estrategico():
     st.session_state["filtro_regiao"] = select_column2.multiselect(
         label="Região",
         options=st.session_state["list_regioes"],
-        default=st.session_state["filtro_regiao"]
+        default=st.session_state.get("filtro_regiao") if st.session_state.get("filtro_regiao") in st.session_state["list_regioes"] else st.session_state["list_regioes"][0]
         if "filtro_regiao" in st.session_state.keys()
         else settings.get("FILTRO_REGIAO_VALUE_DEFAULT", "Todas"),
         help="Selecione a região desejada",
@@ -379,7 +402,7 @@ def load_page_plan_estrategico():
     st.session_state["filtro_supt"] = select_column3.multiselect(
         label="Superintendência",
         options=st.session_state["list_supt"],
-        default=st.session_state["filtro_supt"]
+        default=st.session_state.get("filtro_supt") if st.session_state.get("filtro_supt") in st.session_state["list_supt"] else st.session_state["list_supt"][0]
         if "filtro_supt" in st.session_state.keys()
         else settings.get("FILTRO_SUPT_VALUE_DEFAULT", "Todas"),
         help="Selecione a superintendência desejada",
@@ -397,19 +420,15 @@ def load_page_plan_estrategico():
     select_column4.markdown("")
     select_column4.button("Redefinir Filtros", on_click=redefine_filtros_default)
 
-    print(
-        st.session_state["filtro_mercado"],
-        st.session_state["filtro_regiao"],
-        st.session_state["filtro_supt"],
-    )
-
     # SELECIONANDO OS VALORES DO DATAFRAME VIA COMBOBOX
     st.session_state["selected_df"] = get_dataframe_filter(
-        dataframe=st.session_state["df_planejamento"],
+        dataframe=st.session_state["selected_df"],
         filtro_mercado=st.session_state["filtro_mercado"],
         filtro_regiao=st.session_state["filtro_regiao"],
         filtro_supt=st.session_state["filtro_supt"],
     )
+
+    print(st.session_state["selected_df"])
 
     # PLOTANDO O MAPA
     (
@@ -450,7 +469,8 @@ def load_page_plan_estrategico():
             )
         else:
             # PLOTANDO O DATAFRAME EM TELA
-            selected_df = st.dataframe(dataframe_return, use_container_width=True)
+            selected_df = st.dataframe(dataframe_return,
+                                       use_container_width=True)
             # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
             st.session_state["selected_df"] = dataframe_return
 
@@ -462,7 +482,10 @@ def load_page_plan_estrategico():
             df1=st.session_state["selected_df"], df2=st.session_state["current_map_df"]
         ):
             # REALIZAR NOVO REFRESH NA PÁGINA
-            logger.info("ENTROU")
+            logger.info("ATUALIZANDO DATAFRAMES")
+            redefine_filtros(dataframe=st.session_state["selected_df"],
+                             multiselect_change="dataframe",
+                             key="dataframe")
             # st.experimental_rerun()
 
         st.text(
