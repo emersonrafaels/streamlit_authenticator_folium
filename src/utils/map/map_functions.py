@@ -20,13 +20,12 @@ from branca.element import Template, MacroElement
 
 
 def add_caterical_legend_draggable(folium_map, title, colors, labels):
+    if len(colors) != len(labels):
+        raise ValueError("colors and labels must have the same length.")
 
-  if len(colors) != len(labels):
-      raise ValueError("colors and labels must have the same length.")
+    color_by_label = dict(zip(labels, colors))
 
-  color_by_label = dict(zip(labels, colors))
-
-  template = """
+    template = """
   {% macro html(this, kwargs) %}
 
   <!doctype html>
@@ -61,21 +60,27 @@ def add_caterical_legend_draggable(folium_map, title, colors, labels):
       style='position: absolute; z-index:9999; border:2px solid grey; background-color:rgba(255, 255, 255, 0.8);
       border-radius:6px; padding: 10px; font-size:14px; right: 20px; bottom: 20px;'>"""
 
-  template2 = f"""
+    template2 = f"""
   <div class='legend-title'>{title}</div>
   <div class='legend-scale'>
     <ul class='legend-labels'>"""
 
-  for label, color in color_by_label.items():
-    template2 = template2 + f"<li><span style='background:{color};opacity:0.7;'></span>{label}</li>"
+    for label, color in color_by_label.items():
+        template2 = (
+            template2
+            + f"<li><span style='background:{color};opacity:0.7;'></span>{label}</li>"
+        )
 
-  template2 = template2 + """
+    template2 = (
+        template2
+        + """
     </ul>
   </div>
   </div>
   """
+    )
 
-  template3 = """
+    template3 = """
   </body>
   </html>
 
@@ -120,14 +125,14 @@ def add_caterical_legend_draggable(folium_map, title, colors, labels):
   </style>
   {% endmacro %}"""
 
-  html_result = template + template2 + template3
+    html_result = template + template2 + template3
 
-  macro = MacroElement()
-  macro._template = Template(html_result)
+    macro = MacroElement()
+    macro._template = Template(html_result)
 
-  folium_map.get_root().add_child(macro)
+    folium_map.get_root().add_child(macro)
 
-  return folium_map, html_result
+    return folium_map, html_result
 
 
 def download_folium_map(mapobj):
@@ -147,6 +152,7 @@ def download_folium_map(mapobj):
     processed_map = mapobj._repr_html_()
 
     return processed_map
+
 
 def folium_static(
     fig,
@@ -185,10 +191,12 @@ def folium_static(
         fig = folium.Figure().add_child(fig)
 
         if add_categorical_legend:
-            fig, _ = add_caterical_legend_draggable(folium_map=fig,
-                                                    title=title_legend,
-                                                    labels=list_categories,
-                                                    colors=list_colors)
+            fig, _ = add_caterical_legend_draggable(
+                folium_map=fig,
+                title=title_legend,
+                labels=list_categories,
+                colors=list_colors,
+            )
 
         return components.html(
             fig.render(), height=(fig.height or height) + 10, width=width
@@ -201,10 +209,12 @@ def folium_static(
         return components.html(fig._repr_html_(), height=height + 10, width=width)
 
     if add_categorical_legend:
-        fig, _ = add_caterical_legend_draggable(folium_map=fig,
-                                                title=title_legend,
-                                                labels=list_categories,
-                                                colors=list_colors)
+        fig, _ = add_caterical_legend_draggable(
+            folium_map=fig,
+            title=title_legend,
+            labels=list_categories,
+            colors=list_colors,
+        )
 
     return st_folium(fig, width=width, height=height, returned_objects=[])
 

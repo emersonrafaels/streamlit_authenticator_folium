@@ -15,31 +15,18 @@ from utils.agstyler import draw_grid
 from utils.map.map_functions import load_map
 from utils.map.map_functions import folium_static
 from utils.dataframe_explorer import dataframe_explorer
+from graphs import get_dataframe_to_plot
 from graphs import create_graphs
 
 dir_root = Path(__file__).absolute().parent.parent
 
 
-def get_current_status(status_atual, status_recomendacao):
-    return_status_recomendacao = ("RECOMENDAÇÃO INICIAL", status_recomendacao)
-    return_status_atual = ("ESTRATÉGIA DEFINIDA", status_atual)
-
-    if isinstance(status_atual, str):
-        if status_atual == "" or status_atual is None:
-            return return_status_recomendacao
-    elif isinstance(status_atual, float):
-        if np.isnan(status_atual):
-            return return_status_recomendacao
-
-    return return_status_atual
-
-
-def __save_action__(data_planejamento,
-                    data_selected,
-                    ag_selected,
-                    action_selected):
-
-    print("SALVANDO ESTRATÉGIA - AGÊNCIA: {} - ESTRATÉGIA: {}".format(ag_selected, action_selected))
+def __save_action__(data_planejamento, data_selected, ag_selected, action_selected):
+    print(
+        "SALVANDO ESTRATÉGIA - AGÊNCIA: {} - ESTRATÉGIA: {}".format(
+            ag_selected, action_selected
+        )
+    )
 
     # OBTENDO A COLUNA PARA SALVAR AS AÇÕES
     col_save_action = settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
@@ -47,7 +34,6 @@ def __save_action__(data_planejamento,
     # VERIFICANDO SE A COLUNA EXISTE, CASO NÃO EXISTA
     # CRIA COLUNA PARA SALVAR A ESTRATÉGIA SELECIONADA
     for data in [data_planejamento, data_selected]:
-
         if not col_save_action in data:
             data[col_save_action] = ""
 
@@ -363,29 +349,77 @@ def load_page_plan_estrategico():
     # st.divider()
 
     # INCLUINDO EXPANDER COM RESUMO DO PREENCHIMENTO
-    with st.expander(label="Resumo"):
-
-        if settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA") not in st.session_state["df_planejamento"]:
-            st.session_state["df_planejamento"][settings.get("COL_SAVE_ACTION",
-                                                             "ESTRATÉGIA SELECIONADA")] = ""
+    with st.expander(label="Resumo da atividade"):
+        if (
+            settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
+            not in st.session_state["df_planejamento"]
+        ):
+            st.session_state["df_planejamento"][
+                settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
+            ] = ""
 
         # OBTENDO O DATAFRAME
-        df_plot = st.session_state["df_planejamento"].copy()
-        df_plot["MOMENTO ESTRATÉGIA ATUAL"], df_plot["ESTRATÉGIA ATUAL"] = zip(*df_plot.apply(lambda x: get_current_status(x[settings.get("COL_SAVE_ACTION",
-                                                                                                                                          "ESTRATÉGIA SELECIONADA")],
-                                                                                                                           x[settings.get("COLUMN_STATUS",
-                                                                                                                                          "STATUS")]), axis=1))
+        dataframe_to_plot = get_dataframe_to_plot.get_fill_recomendation(
+            st.session_state["df_planejamento"]
+        )
 
+        # CRIANDO AS ABAS
         tab1, tab2 = st.tabs(["Preenchimento", "Visão por estratégia"])
 
         with tab1:
             st.plotly_chart(
-                create_graphs.get_graph_fill_recomendations(data=df_plot,
-                                                            column_status="MOMENTO ESTRATÉGIA ATUAL"),
-                theme='streamlit',
-                use_container_width=True)
+                create_graphs.get_bar_plot_fill_recomendations(
+                    data=dataframe_to_plot,
+                    column_status="MOMENTO ESTRATÉGIA ATUAL",
+                ),
+                theme="streamlit",
+                config={'displayModeBar': False},
+                use_container_width=True,
+            )
         with tab2:
-            pass
+            tab_2_column_1, tab_2_column_2 = st.columns(2)
+            with tab_2_column_1:
+
+                st.subheader("Recomendação inicial")
+
+                # CRIANDO O GRÁFICO - POR STATUS
+                validator, fig_pie_plot_tab_2_column_1 = create_graphs.get_pie_plot_fill_recomendations_status(
+                    data=dataframe_to_plot,
+                    column_status="STATUS",
+                )
+
+                if validator:
+
+                    st.plotly_chart(
+                        figure_or_data=fig_pie_plot_tab_2_column_1,
+                        theme="streamlit",
+                        config={'displayModeBar': False},
+                        use_container_width=True,
+                    )
+
+                else:
+                    st.text("Não há nenhum dado para ser mostrado")
+            with tab_2_column_2:
+
+                st.subheader("Estratégia selecionada")
+
+                # CRIANDO O GRÁFICO - POR ESTRATÉGIA SELECIONADA
+                validator, fig_pie_plot_tab_2_column_2 = create_graphs.get_pie_plot_fill_recomendations_status(
+                    data=dataframe_to_plot,
+                    column_status="ESTRATÉGIA SELECIONADA",
+                )
+
+                if validator:
+
+                    st.plotly_chart(
+                        figure_or_data=fig_pie_plot_tab_2_column_2,
+                        theme="streamlit",
+                        config={'displayModeBar': False},
+                        use_container_width=True,
+                    )
+
+                else:
+                    st.text("Nenhuma estratégia foi aplicada")
 
     select_column1, select_column2, select_column3, select_column4 = st.columns(4)
 
@@ -481,13 +515,15 @@ def load_page_plan_estrategico():
 
     with st.container():
         # INCLUINDO O MAPA NO APP
-        st_data = folium_static(st.session_state["mapobj"],
-                                width=900,
-                                height=500,
-                                add_categorical_legend=True,
-                                title_legend="Legenda",
-                                list_categories=["Ag Black", "Ag Blue"],
-                                list_colors=["#ffffff", "#3391FF"])
+        st_data = folium_static(
+            st.session_state["mapobj"],
+            width=900,
+            height=500,
+            add_categorical_legend=True,
+            title_legend="Legenda",
+            list_categories=["Ag Black", "Ag Blue"],
+            list_colors=["#ffffff", "#3391FF"],
+        )
 
         # OBTENDO O DATAFRAME
         dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(
@@ -540,8 +576,7 @@ def load_page_plan_estrategico():
             ag_action = st.selectbox(
                 label="Estratégia",
                 options=settings.get(
-                    "OPTIONS_ESTRATEGIA",
-                    ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]
+                    "OPTIONS_ESTRATEGIA", ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]
                 ),
                 help="Selecione a estratégia desejada para a agência",
             )
@@ -553,10 +588,12 @@ def load_page_plan_estrategico():
                 label="Aplicar estratégia",
                 help="Ao clicar no botão, os dados serão salvos",
                 on_click=__save_action__,
-                args=(st.session_state["df_planejamento"],
-                      st.session_state["selected_df"],
-                      ag_selected,
-                      ag_action),
+                args=(
+                    st.session_state["df_planejamento"],
+                    st.session_state["selected_df"],
+                    ag_selected,
+                    ag_action,
+                ),
             )
 
         col1, col2, col3 = st.columns(3)
