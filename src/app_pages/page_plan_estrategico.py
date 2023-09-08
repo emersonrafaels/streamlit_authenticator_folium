@@ -4,7 +4,6 @@ from inspect import stack
 import pandas as pd
 import streamlit as st
 from dynaconf import settings
-from streamlit_folium import folium_static
 from loguru import logger
 
 from utils.pandas_functions import (
@@ -13,10 +12,26 @@ from utils.pandas_functions import (
     compare_dataframes,
 )
 from utils.agstyler import draw_grid
-from utils.map.map_functions import load_map, download_folium_map
+from utils.map.map_functions import load_map
+from utils.map.map_functions import folium_static
 from utils.dataframe_explorer import dataframe_explorer
+from graphs import create_graphs
 
 dir_root = Path(__file__).absolute().parent.parent
+
+
+def get_current_status(status_atual, status_recomendacao):
+    return_status_recomendacao = ("RECOMENDAÇÃO INICIAL", status_recomendacao)
+    return_status_atual = ("ESTRATÉGIA DEFINIDA", status_atual)
+
+    if isinstance(status_atual, str):
+        if status_atual == "" or status_atual is None:
+            return return_status_recomendacao
+    elif isinstance(status_atual, float):
+        if np.isnan(status_atual):
+            return return_status_recomendacao
+
+    return return_status_atual
 
 
 def __save_action__(data_planejamento,
@@ -341,12 +356,36 @@ def load_page_plan_estrategico():
             ].unique()
         )
 
-    # INCLUINDO O DATAFRAME EM TELA
     # NO MAIN
     st.markdown("# APP - PLANEJAMENTO ESTRATÉGICO")
 
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
+
+    # INCLUINDO EXPANDER COM RESUMO DO PREENCHIMENTO
+    with st.expander(label="Resumo"):
+
+        if settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA") not in st.session_state["df_planejamento"]:
+            st.session_state["df_planejamento"][settings.get("COL_SAVE_ACTION",
+                                                             "ESTRATÉGIA SELECIONADA")] = ""
+
+        # OBTENDO O DATAFRAME
+        df_plot = st.session_state["df_planejamento"].copy()
+        df_plot["MOMENTO ESTRATÉGIA ATUAL"], df_plot["ESTRATÉGIA ATUAL"] = zip(*df_plot.apply(lambda x: get_current_status(x[settings.get("COL_SAVE_ACTION",
+                                                                                                                                          "ESTRATÉGIA SELECIONADA")],
+                                                                                                                           x[settings.get("COLUMN_STATUS",
+                                                                                                                                          "STATUS")]), axis=1))
+
+        tab1, tab2 = st.tabs(["Preenchimento", "Visão por estratégia"])
+
+        with tab1:
+            st.plotly_chart(
+                create_graphs.get_graph_fill_recomendations(data=df_plot,
+                                                            column_status="MOMENTO ESTRATÉGIA ATUAL"),
+                theme='streamlit',
+                use_container_width=True)
+        with tab2:
+            pass
 
     select_column1, select_column2, select_column3, select_column4 = st.columns(4)
 
@@ -442,7 +481,13 @@ def load_page_plan_estrategico():
 
     with st.container():
         # INCLUINDO O MAPA NO APP
-        st_data = folium_static(st.session_state["mapobj"], width=900, height=500)
+        st_data = folium_static(st.session_state["mapobj"],
+                                width=900,
+                                height=500,
+                                add_categorical_legend=True,
+                                title_legend="Legenda",
+                                list_categories=["Ag Black", "Ag Blue"],
+                                list_colors=["#ffffff", "#3391FF"])
 
         # OBTENDO O DATAFRAME
         dataframe_explorer_type, dataframe_return = convert_dataframe_explorer(
@@ -450,6 +495,7 @@ def load_page_plan_estrategico():
             style=settings.get("OPTION_DATAFRAME_EXPLORER", "aggrid_default"),
         )
 
+        # INCLUINDO O DATAFRAME
         if dataframe_explorer_type in ["agstyle", "aggrid_default"]:
             # OBTENDO O DATAFRAME DAS LINHAS SELECIONADAS
             st.session_state["selected_df"] = pd.DataFrame(
@@ -505,12 +551,24 @@ def load_page_plan_estrategico():
             st.markdown("")
             bt_action = st.button(
                 label="Aplicar estratégia",
-                help="Ao clicar no botão, os dados serão salvos na atualizados",
+                help="Ao clicar no botão, os dados serão salvos",
                 on_click=__save_action__,
                 args=(st.session_state["df_planejamento"],
                       st.session_state["selected_df"],
                       ag_selected,
                       ag_action),
+            )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("")
+            st.markdown("")
+            bt_action = st.button(
+                label="Salvar estratégia",
+                help="Ao clicar no botão, os dados serão salvos",
+                on_click=__save_excel__,
+                args=(st.session_state["df_planejamento"],),
             )
 
 

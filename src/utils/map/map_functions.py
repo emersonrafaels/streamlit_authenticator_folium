@@ -7,6 +7,7 @@ import branca
 import pandas as pd
 import folium
 import streamlit as st
+import streamlit.components.v1 as components
 from folium.plugins import MarkerCluster
 from dynaconf import settings
 from loguru import logger
@@ -14,6 +15,119 @@ from loguru import logger
 from utils.generic_functions import calculate_time_usage, convert_to_number
 
 dir_root = Path(__file__).absolute().parent.parent.parent
+
+from branca.element import Template, MacroElement
+
+
+def add_caterical_legend_draggable(folium_map, title, colors, labels):
+
+  if len(colors) != len(labels):
+      raise ValueError("colors and labels must have the same length.")
+
+  color_by_label = dict(zip(labels, colors))
+
+  template = """
+  {% macro html(this, kwargs) %}
+
+  <!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>jQuery UI Draggable - Default functionality</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script>
+    $( function() {
+      $( "#maplegend" ).draggable({
+                      start: function (event, ui) {
+                          $(this).css({
+                              right: "auto",
+                              top: "auto",
+                              bottom: "auto"
+                          });
+                      }
+                  });
+  });
+
+    </script>
+  </head>
+  <body>
+
+  <div id='maplegend' class='maplegend'
+      style='position: absolute; z-index:9999; border:2px solid grey; background-color:rgba(255, 255, 255, 0.8);
+      border-radius:6px; padding: 10px; font-size:14px; right: 20px; bottom: 20px;'>"""
+
+  template2 = f"""
+  <div class='legend-title'>{title}</div>
+  <div class='legend-scale'>
+    <ul class='legend-labels'>"""
+
+  for label, color in color_by_label.items():
+    template2 = template2 + f"<li><span style='background:{color};opacity:0.7;'></span>{label}</li>"
+
+  template2 = template2 + """
+    </ul>
+  </div>
+  </div>
+  """
+
+  template3 = """
+  </body>
+  </html>
+
+  <style type='text/css'>
+    .maplegend .legend-title {
+      text-align: left;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 90%;
+      }
+    .maplegend .legend-scale ul {
+      margin: 0;
+      margin-bottom: 5px;
+      padding: 0;
+      float: left;
+      list-style: none;
+      }
+    .maplegend .legend-scale ul li {
+      font-size: 80%;
+      list-style: none;
+      margin-left: 0;
+      line-height: 18px;
+      margin-bottom: 2px;
+      }
+    .maplegend ul.legend-labels li span {
+      display: block;
+      float: left;
+      height: 16px;
+      width: 30px;
+      margin-right: 5px;
+      margin-left: 0;
+      border: 1px solid #999;
+      }
+    .maplegend .legend-source {
+      font-size: 80%;
+      color: #777;
+      clear: both;
+      }
+    .maplegend a {
+      color: #777;
+      }
+  </style>
+  {% endmacro %}"""
+
+  html_result = template + template2 + template3
+
+  macro = MacroElement()
+  macro._template = Template(html_result)
+
+  folium_map.get_root().add_child(macro)
+
+  return folium_map, html_result
 
 
 def download_folium_map(mapobj):
@@ -33,6 +147,66 @@ def download_folium_map(mapobj):
     processed_map = mapobj._repr_html_()
 
     return processed_map
+
+def folium_static(
+    fig,
+    width: int = 700,
+    height: int = 500,
+    add_categorical_legend=False,
+    title_legend="Legenda",
+    list_categories=[],
+    list_colors=[],
+):
+    """
+    Renders `folium.Figure` or `folium.Map` in a Streamlit app. This method is
+    a static Streamlit Component, meaning, no information is passed back from
+    Leaflet on browser interaction.
+    Parameters
+    ----------
+    fig  : folium.Map or folium.Figure
+        Geospatial visualization to render
+    width : int
+        Width of result
+    Height : int
+        Height of result
+    Note
+    ----
+    If `height` is set on a `folium.Map` or `folium.Figure` object,
+    that value supersedes the values set with the keyword arguments of this function.
+
+    Example
+    -------
+    >>> m = folium.Map(location=[45.5236, -122.6750])
+    >>> folium_static(m)
+    """
+
+    # if Map, wrap in Figure
+    if isinstance(fig, folium.Map):
+        fig = folium.Figure().add_child(fig)
+
+        if add_categorical_legend:
+            fig, _ = add_caterical_legend_draggable(folium_map=fig,
+                                                    title=title_legend,
+                                                    labels=list_categories,
+                                                    colors=list_colors)
+
+        return components.html(
+            fig.render(), height=(fig.height or height) + 10, width=width
+        )
+
+    # if DualMap, get HTML representation
+    elif isinstance(fig, folium.plugins.DualMap) or isinstance(
+        fig, branca.element.Figure
+    ):
+        return components.html(fig._repr_html_(), height=height + 10, width=width)
+
+    if add_categorical_legend:
+        fig, _ = add_caterical_legend_draggable(folium_map=fig,
+                                                title=title_legend,
+                                                labels=list_categories,
+                                                colors=list_colors)
+
+    return st_folium(fig, width=width, height=height, returned_objects=[])
 
 
 def convert_df_html(
