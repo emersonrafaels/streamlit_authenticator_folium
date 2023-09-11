@@ -1,0 +1,96 @@
+Dear all,
+
+thanks a lot for meaningful discussion.
+I was also faced with the same problem.
+
+Now, I found a solution without 404 not found error.
+
+Environment
+
+python = 3.7.9
+streamlit = 0.71.0
+pyinstaller = 4.1
+After that, suppose we want to make an executable file from the following main.py:
+
+[main.py]
+
+import streamlit as st
+
+if __name__ == '__main__':
+    st.header("Hello world")
+Method
+
+Wrap the main script.
+
+Make a wrapper script run_main.py:
+Add the following lines to cli.py contained in the streamlit distribution, e.g. ${YOUR_CONDA_ENV}/lib/site-packages/streamlit/cli.py:
+[run_main.py]
+
+import streamlit.cli
+
+if __name__ == '__main__':
+    streamlit.cli._main_run_clExplicit('main.py', 'streamlit run')
+[cli.py]
+
+def _main_run_clExplicit(file, command_line, args=[ ]):
+    streamlit._is_running_with_streamlit = True
+    bootstrap.run(file, command_line, args)
+Create ./hooks/hook-streamlit.py:
+[hook-streamlit.py]
+
+from PyInstaller.utils.hooks import copy_metadata
+datas = copy_metadata('streamlit')
+Create ./.streamlit/config.toml:
+[config.toml]
+
+[global]
+developmentMode = false
+
+[server]
+port = 8501
+(NEW) Edit run_main.spec which is created after pyinstaller --onefile --additional-hooks-dir=./hooks run_main.py --clean:
+[run_main.spec]
+
+# -*- mode: python ; coding: utf-8 -*-
+
+block_cipher = None
+
+a = Analysis(['run_main.py'],
+             pathex=['.'],
+             binaries=[],
+             datas=[
+                 (
+                     "{$YOURPYTHONENV}/Lib/site-packages/altair/vegalite/v4/schema/vega-lite-schema.json",
+                     "./altair/vegalite/v4/schema/"
+                 ),
+                 (
+                     "${YOURPYTHONENV}/Lib/site-packages/streamlit/static",
+                     "./streamlit/static"
+                 )
+            ],
+            ...,
+            noarchive=False)
+pyz = PYZ(...)
+exe = EXE(...)
+Finally, execute pyinstaller --onefile --additional-hooks-dir=./hooks run_main.spec --clean.
+Directory
+
+WORKINGDIR/
+    - .streamlit/
+        - config.toml
+    - hooks/
+        - hook-streamlit.py
+    - main.py
+    - run_main.py
+    - run_main.spec
+    - build/
+        - run_main/
+            - many .toc and .pyz
+    - dist/
+        - run_main.exe
+NOTE
+
+The executable file created above does not work alone.
+You should copy .streamlit and main.py into dist direcoty.
+
+Thank you

@@ -77,6 +77,8 @@ def draw_grid(
                 gb.configure_column(field, header_name=header, type=type)
 
     # Enable multi-row selection
+    print(selection)
+    print(use_checkbox)
     gb.configure_selection(selection_mode=selection, use_checkbox=use_checkbox)
 
     # VALIDANDO SE É DESEJADO QUE TODAS AS LINHAS INICIEM SELECIONADAS

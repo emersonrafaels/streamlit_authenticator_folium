@@ -24,7 +24,7 @@ DIR_SAVE_RESULT = "resultados/RESULTADO_ESTRATEGICO.xlsx"
 
 # DATAFRAMES
 LIST_OPTIONS_DATAFRAME_EXPLORER = ["agstyle", "aggrid_default", "dataframe_explorer"]
-OPTION_DATAFRAME_EXPLORER = "agstyle"
+OPTION_DATAFRAME_EXPLORER = "dataframe_explorer"
 
 # COLUNAS DE FILTRO
 COLUMN_MERCADO = "MERCADO"
