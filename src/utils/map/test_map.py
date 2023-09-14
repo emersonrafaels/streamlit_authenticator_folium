@@ -1,7 +1,8 @@
 from pathlib import Path
 
+from src.config_app.config_app import settings
+
 import folium
-from dynaconf import settings
 from folium.plugins import MarkerCluster
 
 from src.utils.pandas_functions import load_data

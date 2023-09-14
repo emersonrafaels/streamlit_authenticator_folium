@@ -9,10 +9,14 @@ import folium
 import streamlit as st
 import streamlit.components.v1 as components
 from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
 from dynaconf import settings
 from loguru import logger
 
-from utils.generic_functions import calculate_time_usage, convert_to_number
+try:
+    from utils.generic_functions import calculate_time_usage, convert_to_number
+except ModuleNotFoundError:
+    from src.utils.generic_functions import calculate_time_usage, convert_to_number
 
 dir_root = Path(__file__).absolute().parent.parent.parent
 
@@ -228,6 +232,186 @@ def convert_df_html(
     right_text_color="#FFFFFF",
 ):
     # INICIANDO A VARIÁVEL DE RETORNO
+    html_table = html_init = html_header = html = ""
+
+    # INICIANDO A VARIÁVEL AUXILIAR QUE ARMAZENARÁ AS TABLES
+    value_li = ""
+
+    html_init = (
+        """<!DOCTYPE html>
+      <html>
+      <head>
+        """
+        + """
+        <style>
+        @import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
+        * {
+          box-sizing: border-box;
+        }
+        
+        body {
+          background-color: #f6f5f7;
+          font-family: 'Open Sans', sans-serif;
+          margin-bottom: 50px;
+          font-size: 12px;
+          max-width: 500px;
+        }
+        
+        .text-center {
+          text-align: center;
+          min-width: 100px;
+          max-width: 500px;
+        }
+        
+        .pricing-box-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        
+        .pricing-box {
+          background-color: #ffffff;
+          box-shadow: 0px 2px 15px 0px rgba(0,0,0,0.5);
+          border-radius: 4px;
+          flex: 1;
+          padding: 0 30px 30px;
+          margin: 2%;
+          min-width: 100px;
+          max-width: 250px;
+        }
+        
+        .pricing-box h5 {
+          text-transform: uppercase;
+        }
+        
+        .price {
+          margin: 24px 0;
+          font-size: 36px;
+          font-weight: 900;
+        }
+        
+        .price sub, .price sup {
+          font-size: 16px;
+          font-weight: 100;
+        }
+        
+        .features-list {
+          padding: 0;
+          list-style-type: none;
+        }
+        
+        .features-list li {
+          font-weight: 100;
+          padding: 12px 0;
+          font-weight: 100;
+        }
+        
+        .features-list li:not(:last-of-type) {
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+          border-radius: 25px;
+          border: none;
+          background-color: #EC1362;
+          color: #ffffff;
+          cursor: pointer;
+          padding: 10px 15px;
+          margin-top: 20px;
+          text-transform: uppercase;
+          transition: all 0.1s ease-in-out;
+        }
+        
+        .btn-primary:hover {
+          box-shadow: 0px 2px 15px 0px rgba(0,0,0,0.5);
+          transform: translateY(-3px);
+        }
+        
+        .pricing-box-bg-image {
+          background-image: url('https://images.unsplash.com/photo-1550029402-226115b7c579?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=701&q=80');
+          background-size: cover;
+          background-position: center center;
+          color: #ffffff;
+        }
+        
+        .pricing-box-bg-image .features-list li {
+          border-bottom-color: rgba(255, 255, 255, 1);
+        }
+        
+        .pricing-box-bg-image .btn-primary {
+          background-color: #ffffff;
+          color: #000;
+        }
+        
+        footer {
+          background-color: #222;
+          color: #fff;
+          font-size: 14px;
+          bottom: 0;
+          position: fixed;
+          left: 0;
+          right: 0;
+          text-align: center;
+        }
+        
+        footer p {
+          margin: 10px 0;
+        }
+        
+        footer i {
+          color: red;
+        }
+        
+        footer a {
+          color: #3C97BF;
+          text-decoration: none;
+        }
+        </style>
+      </head>
+      <tbody>
+    """
+    )
+
+    html_header = """
+        <h1 class="text-center">NOME_AGENCIA</h1>
+        """.replace("NOME_AGENCIA", str(row_df.get(col_header)))
+
+    # VERIFICANDO SE O ARGUMENTO É UM DICT
+    if isinstance(row_df, (dict, pd.Series)):
+        # PERCORRENDO O DICT
+        for key, value in row_df.items():
+            value_li += "<li><strong>{}</strong>: {}</li>\n".format(key, value)
+
+        html_table += (
+                """
+       <div class="pricing-box-container">
+      <div class="pricing-box text-center">
+        <h5>Platinum</h5>
+        <p class="price"><sup>$</sup>89<sub>/mo</sub></p>
+        <ul class="features-list">
+          values_li
+        </ul>
+      </div>
+    </div>""".replace("values_li", str(value_li)))
+
+
+    # UNINDO OS HTML
+    html = "{}{}{}".format(html_init, html_header, html_table)
+
+    return html
+
+
+def convert_df_htmlx(
+    row_df,
+    col_header=None,
+    left_col_color="#140083",
+    right_col_color="#140083",
+    left_text_color="#FFFFFF",
+    right_text_color="#FFFFFF",
+):
+    # INICIANDO A VARIÁVEL DE RETORNO
     html = ""
 
     # INICIANDO A VARIÁVEL AUXILIAR QUE ARMAZENARÁ AS TABLES
@@ -243,23 +427,39 @@ def convert_df_html(
         + """
         <style>
       table {
-        border:1px solid #b3adad;
-        border-collapse:collapse;
-        padding:5px;
-        font-family: inherit;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.9em;
+        font-family: sans-serif;
+        min-width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
       }
       table th {
-        border:1px solid #b3adad;
-        padding:5px;
-        background: #f0f0f0;
-        color: #313030;
+        padding: 12px 15px;
       }
       table td {
-        border:1px solid #b3adad;
-        text-align:center;
-        padding:5px;
-        background: #ffffff;
-        color: #313030;
+        padding: 12px 15px;
+      }
+      table tr {
+        background-color: #009879;
+        color: #ffffff;
+        text-align: left;
+      }
+      tbody tr {
+        border-bottom: 1px solid #dddddd;
+      }
+      tbody tr:nth-of-type(even) {
+          background-color: #f3f3f3;
+      }
+      tbody tr:last-of-type {
+          border-bottom: 2px solid #009879;
+      }
+      tbody tr.active-row {
+        font-weight: bold;
+        color: #009879;
+      }
+      leaflet-popup-content{
+        width: 400px;
       }
     </style>
       </head>
@@ -297,7 +497,6 @@ def convert_df_html(
 
     return html
 
-
 def get_icon(dict_icons=None, status=None):
     """
 
@@ -326,7 +525,7 @@ def get_icon(dict_icons=None, status=None):
 
         # VERIFICANDO SE O ICON DEFAULT EXISTE
         if not path.exists(icon_default):
-            icon_default = "ok-sign"
+            return folium.Icon("ok-sign")
 
         if dict_icons:
             # VERIFICANDO SE O STATUS CONSTA NO DICT DE ICONS
@@ -492,7 +691,7 @@ def load_map(
                         right_text_color="#FFFFFF",
                     )
 
-                    iframe = branca.element.IFrame(html=html, width=510, height=280)
+                    iframe = branca.element.IFrame(html=html, width=400, height=280)
                     popup = folium.Popup(iframe, max_width=500)
 
                     current_icon = get_icon(dict_icons, status)

@@ -1,2 +1,2 @@
-from app_pages import *
-from utils import *
+from src.app_pages import *
+from src.utils import *
