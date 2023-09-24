@@ -1,8 +1,15 @@
+try:
+    from config_app.config_app import settings
+except Exception as ex:
+    from src.config_app.config_app import settings
+
 import os
+from pathlib import Path
 
 import pandas as pd
 from loguru import logger
-from dynaconf import settings
+
+dir_root = Path(__file__).parent.parent.parent
 
 
 def read_credentials_excel(dir_credential_excel, col_index=None):
@@ -24,6 +31,8 @@ def read_credentials_excel(dir_credential_excel, col_index=None):
 
     logger.info("INICIANDO A LEITURA DAS CREDENCIAIS")
 
+    dir_credential_excel = str(Path(dir_root, dir_credential_excel))
+
     # VERIFICANDO SE O ARQUIVO EXCEL EXISTE
     if os.path.exists(dir_credential_excel):
         # REALIZANDO A LEITURA DO EXCEL
@@ -35,7 +44,7 @@ def read_credentials_excel(dir_credential_excel, col_index=None):
             if settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME"):
                 # APLICANDO O DICT RENAME
                 df = df.rename(
-                    columns=settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME")
+                    columns=settings.get("AUTHENTICATION_CREDENTIALS_INDEX_DICT_RENAME"),
                 )
 
         # OBTENDO O DADO EM FORMATO DICT

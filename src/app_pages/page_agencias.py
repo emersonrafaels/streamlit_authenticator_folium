@@ -1,8 +1,12 @@
+try:
+    from config_app.config_app import settings
+except Exception as ex:
+    from src.config_app.config_app import settings
+
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from dynaconf import settings
 from loguru import logger
 
 from utils.pandas_functions import load_data
@@ -17,9 +21,12 @@ def load_page_agencias():
 
     if "df_planejamento" not in st.session_state.keys():
         # CARREGANDO DATAFRAME
-        df_planejamento = load_data(
-            data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
+        dict_result = load_data(
+            data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS"))),
+            header=[0, 1]
         )
+
+        df_planejamento = dict_result["DATAFRAME_RESULT"]
 
         logger.info("DADOS OBTIDOS COM SUCESSO")
 

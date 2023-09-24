@@ -1,5 +1,9 @@
+try:
+    from config_app.config_app import settings
+except Exception as ex:
+    from src.config_app.config_app import settings
+
 import streamlit as st
-from dynaconf import settings
 
 from utils.streamlit_functions import add_logo
 from app_pages import page_agencias, page_plan_estrategico

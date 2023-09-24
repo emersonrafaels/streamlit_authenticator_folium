@@ -1,22 +1,39 @@
+try:
+    from config_app.config_app import settings
+except Exception as ex:
+    from src.config_app.config_app import settings
+
 from pathlib import Path
 from inspect import stack
 
 import pandas as pd
 import streamlit as st
-from dynaconf import settings
 from loguru import logger
 
-from utils.pandas_functions import (
-    load_data,
-    convert_dataframe_to_aggrid,
-    compare_dataframes,
-)
-from utils.agstyler import draw_grid
-from utils.map.map_functions import load_map
-from utils.map.map_functions import folium_static
-from utils.dataframe_explorer import dataframe_explorer
-from graphs import get_dataframe_to_plot
-from graphs import create_graphs
+try:
+    from utils.pandas_functions import (
+        load_data,
+        convert_dataframe_to_aggrid,
+        compare_dataframes,
+    )
+    from utils.agstyler import draw_grid
+    from utils.map.map_functions import load_map
+    from utils.map.map_functions import folium_static
+    from utils.dataframe_explorer import dataframe_explorer
+    from graphs import get_dataframe_to_plot
+    from graphs import create_graphs
+except ModuleNotFoundError:
+    from src.utils.pandas_functions import (
+        load_data,
+        convert_dataframe_to_aggrid,
+        compare_dataframes,
+    )
+    from src.utils.agstyler import draw_grid
+    from src.utils.map.map_functions import load_map
+    from src.utils.map.map_functions import folium_static
+    from src.utils.dataframe_explorer import dataframe_explorer
+    from src.graphs import get_dataframe_to_plot
+    from src.graphs import create_graphs
 
 dir_root = Path(__file__).absolute().parent.parent
 
@@ -287,9 +304,12 @@ def load_page_plan_estrategico():
 
     if "df_planejamento" not in st.session_state.keys():
         # CARREGANDO DATAFRAME
-        df_planejamento = load_data(
-            data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS")))
+        dict_result = load_data(
+            data_dir=str(Path(dir_root, settings.get("DATA_DIR_AGENCIAS"))),
+            header=[0, 1]
         )
+
+        df_planejamento = dict_result["DATAFRAME_RESULT"]
 
         logger.info("DADOS OBTIDOS COM SUCESSO")
 
@@ -347,79 +367,6 @@ def load_page_plan_estrategico():
 
     # CRIANDO UMA LINHA EM BRANCO
     # st.divider()
-
-    # INCLUINDO EXPANDER COM RESUMO DO PREENCHIMENTO
-    with st.expander(label="Resumo da atividade"):
-        if (
-            settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
-            not in st.session_state["df_planejamento"]
-        ):
-            st.session_state["df_planejamento"][
-                settings.get("COL_SAVE_ACTION", "ESTRATÉGIA SELECIONADA")
-            ] = ""
-
-        # OBTENDO O DATAFRAME
-        dataframe_to_plot = get_dataframe_to_plot.get_fill_recomendation(
-            st.session_state["df_planejamento"]
-        )
-
-        # CRIANDO AS ABAS
-        tab1, tab2 = st.tabs(["Preenchimento", "Visão por estratégia"])
-
-        with tab1:
-            st.plotly_chart(
-                create_graphs.get_bar_plot_fill_recomendations(
-                    data=dataframe_to_plot,
-                    column_status="MOMENTO ESTRATÉGIA ATUAL",
-                ),
-                theme="streamlit",
-                config={'displayModeBar': False},
-                use_container_width=True,
-            )
-        with tab2:
-            tab_2_column_1, tab_2_column_2 = st.columns(2)
-            with tab_2_column_1:
-
-                st.subheader("Recomendação inicial")
-
-                # CRIANDO O GRÁFICO - POR STATUS
-                validator, fig_pie_plot_tab_2_column_1 = create_graphs.get_pie_plot_fill_recomendations_status(
-                    data=dataframe_to_plot,
-                    column_status="STATUS",
-                )
-
-                if validator:
-
-                    st.plotly_chart(
-                        figure_or_data=fig_pie_plot_tab_2_column_1,
-                        theme="streamlit",
-                        config={'displayModeBar': False},
-                        use_container_width=True,
-                    )
-
-                else:
-                    st.text("Não há nenhum dado para ser mostrado")
-            with tab_2_column_2:
-
-                st.subheader("Estratégia selecionada")
-
-                # CRIANDO O GRÁFICO - POR ESTRATÉGIA SELECIONADA
-                validator, fig_pie_plot_tab_2_column_2 = create_graphs.get_pie_plot_fill_recomendations_status(
-                    data=dataframe_to_plot,
-                    column_status="ESTRATÉGIA SELECIONADA",
-                )
-
-                if validator:
-
-                    st.plotly_chart(
-                        figure_or_data=fig_pie_plot_tab_2_column_2,
-                        theme="streamlit",
-                        config={'displayModeBar': False},
-                        use_container_width=True,
-                    )
-
-                else:
-                    st.text("Nenhuma estratégia foi aplicada")
 
     select_column1, select_column2, select_column3, select_column4 = st.columns(4)
 
@@ -547,66 +494,7 @@ def load_page_plan_estrategico():
         print(len(st.session_state["current_map_df"]))
         print(validator_rerun)
 
-        if not compare_dataframes(
-            df1=st.session_state["selected_df"], df2=st.session_state["current_map_df"]
-        ):
-            # REALIZAR NOVO REFRESH NA PÁGINA
-            logger.info("ENTROU")
-            # st.experimental_rerun()
-
-        st.text(
-            "Foram selecionados {} agências".format(
-                len(st.session_state["selected_df"])
-            )
-        )
         st.text("Mapa: {} agências".format(len(st.session_state["current_map_df"])))
-
-    # INCLUINDO A POSSIBILIDADE DE SELECIONAR UMA AÇÃO PARA UMA DETERMINADA AGÊNCIA
-    with st.container():
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            ag_selected = st.selectbox(
-                label="Agência",
-                options=df_planejamento[
-                    settings.get("COLUMN_NUM_AGENCIA", "CÓDIGO AG")
-                ].unique(),
-                help="Selecione o número da agência desejada",
-            )
-        with col2:
-            ag_action = st.selectbox(
-                label="Estratégia",
-                options=settings.get(
-                    "OPTIONS_ESTRATEGIA", ["ENCERRAR", "MANTER", "ESPAÇO ITAÚ"]
-                ),
-                help="Selecione a estratégia desejada para a agência",
-            )
-
-        with col3:
-            st.markdown("")
-            st.markdown("")
-            bt_action = st.button(
-                label="Aplicar estratégia",
-                help="Ao clicar no botão, os dados serão salvos",
-                on_click=__save_action__,
-                args=(
-                    st.session_state["df_planejamento"],
-                    st.session_state["selected_df"],
-                    ag_selected,
-                    ag_action,
-                ),
-            )
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.markdown("")
-            st.markdown("")
-            bt_action = st.button(
-                label="Salvar estratégia",
-                help="Ao clicar no botão, os dados serão salvos",
-                on_click=__save_excel__,
-                args=(st.session_state["df_planejamento"],),
-            )
 
 
 if __name__ == "__main__":

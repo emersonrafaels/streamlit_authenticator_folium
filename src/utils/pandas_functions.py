@@ -28,7 +28,12 @@ def rows_to_uppercase(data, trim=False):
 
 
 @st.cache_data
-def load_data(data_dir, column_uppercase=True, row_uppercase=True, trim_values=True):
+def load_data(data_dir,
+              header=0,
+              column_uppercase=True,
+              row_uppercase=True,
+              trim_values=True,
+              multiindex=False):
     """
 
     REALIZA A LEITURA DOS DADOS
@@ -41,23 +46,48 @@ def load_data(data_dir, column_uppercase=True, row_uppercase=True, trim_values=T
                                              todas linhas (valores) uppercase (Boolean)
         trim_values              - Required: Validador para remover espaços antes e depois,
                                              em valores strings (Boolean)
+        multiindex               - Optional: Se é desejado ler um dataframe multiindex (Boolean)
 
     # Returns
         df                       - Required: Dado após leitura (DataFrame)
 
     """
+
+    # INICIANDO O DICT RESULT
+    dict_result = {}
+
     # REALIZANDO A LEITURA DOS DADOS
     if "csv" in data_dir:
-        df = pd.read_csv(data_dir)
+        df = pd.read_csv(data_dir, header)
     else:
-        df = pd.read_excel(data_dir)
+        df = pd.read_excel(data_dir, header)
 
-    if column_uppercase:
-        df = column_to_uppercase(data=df)
-    if row_uppercase:
-        df = rows_to_uppercase(data=df, trim=trim_values)
+    if not multiindex:
 
-    return df
+        if column_uppercase:
+            df = column_to_uppercase(data=df)
+        if row_uppercase:
+            df = rows_to_uppercase(data=df, trim=trim_values)
+
+    if multiindex:
+        df_columns = df.columns.to_numpy()
+        df_columns_level0 = df.columns.get_level_values(0)
+        df_columns_level1 = df.columns.get_level_values(1)
+
+        df.columns = df_columns_level1
+
+        dict_result["DF_COLUMNS"] = df_columns
+        dict_result["DF_COLUMNS_LEVEL0"] = df_columns_level0
+        dict_result["DF_COLUMNS_LEVEL1"] = df_columns_level1
+
+        if column_uppercase:
+            df = column_to_uppercase(data=df)
+        if row_uppercase:
+            df = rows_to_uppercase(data=df, trim=trim_values)
+
+    dict_result["DATAFRAME_RESULT"] = df
+
+    return dict_result
 
 
 def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):

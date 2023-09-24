@@ -1,6 +1,7 @@
-from config_app import config_app
-
-from dynaconf import settings
+try:
+    from src.config_app.config_app import settings
+except ModuleNotFoundError:
+    from config_app.config_app import settings
 
 from page_authentication import main_authenticator
 from configure_logging import configure_logging

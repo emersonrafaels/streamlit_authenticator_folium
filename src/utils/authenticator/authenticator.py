@@ -1,8 +1,15 @@
+try:
+    from config_app.config_app import settings
+except Exception as ex:
+    from src.config_app.config_app import settings
+
 import jwt
 import bcrypt
-import streamlit as st
 from datetime import datetime, timedelta
+
+import streamlit as st
 import extra_streamlit_components as stx
+from loguru import logger
 
 from streamlit_authenticator.hasher import Hasher
 from streamlit_authenticator.validator import Validator
@@ -15,7 +22,14 @@ from streamlit_authenticator.exceptions import (
     UpdateError,
 )
 
-from utils.streamlit_functions import add_logo
+try:
+    from utils.streamlit_functions import add_logo
+    from bd.log_sharepoint import execute_log_sharepoint
+    from utils.authenticator.read_credentials import read_credentials_excel
+except ModuleNotFoundError:
+    from src.utils.streamlit_functions import add_logo
+    from src.bd.log_sharepoint import execute_log_sharepoint
+    from src.utils.authenticator.read_credentials import read_credentials_excel
 
 
 class Authenticate:
@@ -131,7 +145,13 @@ class Authenticate:
         """
         Checks the validity of the reauthentication cookie.
         """
+
+        logger.debug("VALIDANDO O COOKIE")
+
         self.token = self.cookie_manager.get(self.cookie_name)
+
+        logger.debug("VALIDANDO O COOKIE - TOKEN: {}".format(self.token))
+
         if self.token is not None:
             self.token = self._token_decode()
             if self.token is not False:
@@ -159,11 +179,6 @@ class Authenticate:
 
         if self.username in self.credentials["usernames"]:
             try:
-                print(
-                    "USUÁRIO CORRETO - AUTENTICAÇÃO DO PASSWORD: {}".format(
-                        self._check_pw()
-                    )
-                )
                 if self._check_pw():
                     if inplace:
                         st.session_state["name"] = self.credentials["usernames"][
@@ -185,6 +200,71 @@ class Authenticate:
                         st.session_state["authentication_status"] = False
                     else:
                         return False
+            except Exception as e:
+                print(e)
+        else:
+            if inplace:
+                st.session_state["authentication_status"] = False
+            else:
+                return False
+
+    def _check_credentials_sharepoint(self, username, password, inplace: bool = True) -> bool:
+        """
+        Checks the validity of the entered credentials.
+
+        Parameters
+        ----------
+        inplace: bool
+            Inplace setting, True: authentication status will be stored in session state,
+            False: authentication status will be returned as bool.
+        Returns
+        -------
+        bool
+            Validity of entered credentials.
+        """
+
+        # FAZENDO O LOGIN NO SHAREPOINT (BD)
+        validador_sharepoint = execute_log_sharepoint(username=username, password=password)
+
+        if validador_sharepoint:
+            try:
+
+                logger.critical(settings.get(
+                        "AUTHENTICATION_CREDENTIALS_SHAREPOINT"))
+
+                credentials = read_credentials_excel(
+                    dir_credential_excel=settings.get(
+                        "AUTHENTICATION_CREDENTIALS_SHAREPOINT"),
+                    col_index=settings.get("AUTHENTICATION_CREDENTIALS_INDEX"),
+                )
+
+                logger.critical(credentials)
+
+                # ATUALIZANDO AS CREDENCIAIS
+                self.credentials = credentials
+                self.credentials["usernames"] = {
+                    key.lower(): value for key, value in
+                    credentials["usernames"].items()
+                }
+
+                logger.critical(self.credentials)
+
+                if inplace:
+
+                    st.session_state["name"] = self.credentials["usernames"][
+                        self.username
+                    ]["name"]
+                    self.exp_date = self._set_exp_date()
+                    self.token = self._token_encode()
+                    self.cookie_manager.set(
+                        self.cookie_name,
+                        self.token,
+                        expires_at=datetime.now()
+                        + timedelta(days=self.cookie_expiry_days),
+                    )
+                    st.session_state["authentication_status"] = True
+                else:
+                    return True
             except Exception as e:
                 print(e)
         else:
@@ -257,7 +337,11 @@ class Authenticate:
                 )
 
                 if login_form.form_submit_button(form_name_button):
-                    self._check_credentials()
+                    if settings.get("AUTHENTICATOR_BUTTON") == "EXCEL":
+                        self._check_credentials()
+                    else:
+                        self._check_credentials_sharepoint(username=self.username,
+                                                           password=self.password)
 
         return (
             st.session_state["name"],

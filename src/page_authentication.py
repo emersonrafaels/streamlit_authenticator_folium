@@ -4,8 +4,12 @@ from os import path
 from pathlib import Path
 from yaml.loader import SafeLoader
 
+try:
+    from src.config_app.config_app import settings
+except ModuleNotFoundError:
+    from config_app.config_app import settings
+
 import streamlit as st
-from dynaconf import settings
 from loguru import logger
 
 import utils.authenticator.authenticator as stauth
@@ -30,17 +34,36 @@ def get_credentials():
 
     """
 
-    logger.info("INICIANDO A OBTENÇÃO DAS CREDENTIAIS")
+    logger.info("INICIANDO A OBTENÇÃO DAS CREDENCIAIS")
 
-    # OBTENDO CREDENCIAIS DO ARQUIVO EXCEL
-    credentials = read_credentials_excel(
-        dir_credential_excel=settings.get("AUTHENTICATION_CREDENTIALS"),
-        col_index=settings.get("AUTHENTICATION_CREDENTIALS_INDEX"),
-    )
+    if settings.get("AUTHENTICATION_CREDENTIALS_EXCEL") == "EXCEL":
 
-    # OBTENDO AS CONFIGURAÇÕES PARA AS CREDENCIAIS
-    with open(settings.AUTHENTICATION_CONFIG) as file:
-        config_credentials = yaml.load(file, Loader=SafeLoader)
+        logger.info("OBTENDO CREDENCIAIS - EXCEL")
+
+        # OBTENDO CREDENCIAIS DO ARQUIVO EXCEL
+        credentials = read_credentials_excel(
+            dir_credential_excel=settings.get("AUTHENTICATION_CREDENTIALS_EXCEL"),
+            col_index=settings.get("AUTHENTICATION_CREDENTIALS_INDEX"),
+        )
+
+        # OBTENDO AS CONFIGURAÇÕES PARA AS CREDENCIAIS
+        with open(settings.get("AUTHENTICATION_CONFIG_EXCEL")) as file:
+            config_credentials = yaml.load(file, Loader=SafeLoader)
+
+    else:
+
+        logger.info("OBTENDO CREDENCIAIS - SHAREPOINT")
+
+        # OBTENDO CREDENCIAIS DO ARQUIVO SHAREPOINT
+        credentials = read_credentials_excel(
+            dir_credential_excel=settings.get(
+                "AUTHENTICATION_CREDENTIALS_SHAREPOINT"),
+            col_index=settings.get("AUTHENTICATION_CREDENTIALS_INDEX"),
+        )
+
+        # OBTENDO AS CONFIGURAÇÕES PARA AS CREDENCIAIS
+        with open(settings.get("AUTHENTICATION_CONFIG_EXCEL")) as file:
+            config_credentials = yaml.load(file, Loader=SafeLoader)
 
     # DEFININDO O AUTHENTICATOR
     authenticator = stauth.Authenticate(
@@ -71,7 +94,6 @@ def main_authenticator():
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
     # OBTENDO AS CREDENCIAIS
-    logger.info("OBTENDO AS CREDENCIAIS")
     authenticator = get_credentials()
 
     if not st.session_state.get("authentication_status"):
