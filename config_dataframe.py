@@ -72,36 +72,40 @@ def get_describe_dataframe(dataframe, column,
 # OBTENDO O DATAFRAME
 df = get_dataframe()
 
-# OBTENDO AS CONFIGS DO MODELO
-column_config_model={
-        "sales": st.column_config.ProgressColumn(
-            "Sales volume",
-            help="The sales volume in USD",
-            format="$%f",
-            min_value=get_describe_dataframe(dataframe=df,
-											 column="sales",
-											 min_default=0,
-											 max_default=1000).get("MIN", 0),
-            max_value=get_describe_dataframe(dataframe=df,
-											 column="sales",
-											 min_default=0,
-											 max_default=1000).get("MAX", 0),
-        ),
-		"estrategia atual": st.column_config.SelectboxColumn(
-					label="Estrategia atual",
-					help="The sales volume in USD",
-					options=get_describe_dataframe(dataframe=df,
-												   column="estrategia_atual",
-												   options_default=["Azul"]).get("UNIQUE", []),
-		),
-		"estrategia atual": st.column_config.SelectboxColumn(
-							label="Estrategia atual",
-							help="The sales volume in USD",
-							options=get_describe_dataframe(dataframe=df,
-														   column="estrategia_atual",
-														   options_default=["Azul"]).get("UNIQUE", []),
-				),
-    }
+def get_column_config_custom(df):
+
+	# OBTENDO AS CONFIGS DO MODELO
+	column_config_model={
+			"sales": st.column_config.ProgressColumn(
+				"Sales volume",
+				help="The sales volume in USD",
+				format="$%f",
+				min_value=get_describe_dataframe(dataframe=df,
+												 column="sales",
+												 min_default=0,
+												 max_default=1000).get("MIN", 0),
+				max_value=get_describe_dataframe(dataframe=df,
+												 column="sales",
+												 min_default=0,
+												 max_default=1000).get("MAX", 0),
+			),
+			"estrategia atual": st.column_config.SelectboxColumn(
+						label="Estrategia atual",
+						help="The sales volume in USD",
+						options=get_describe_dataframe(dataframe=df,
+													   column="estrategia_atual",
+													   options_default=["Azul"]).get("UNIQUE", []),
+			),
+			"estrategia atual": st.column_config.SelectboxColumn(
+								label="Estrategia atual",
+								help="The sales volume in USD",
+								options=get_describe_dataframe(dataframe=df,
+															   column="estrategia_atual",
+															   options_default=["Azul"]).get("UNIQUE", []),
+					),
+		}
+
+	return column_config_model
 
 
 """
@@ -119,4 +123,4 @@ if isinstance(column_config, (dict)):
 			
 """
 
-print(column_config_model)
+print(get_column_config_custom(df=df))
