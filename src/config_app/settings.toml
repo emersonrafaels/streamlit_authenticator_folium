@@ -45,7 +45,7 @@ COLUMN_SUPT = "SUPT"
 FILTRO_SUPT_VALUE_DEFAULT = "Todas"
 
 # MAPA
-MAP_ICON_DEFALT = "assets/itau.png"
+MAP_ICON_DEFAULT = "assets/itau.png"
 MAP_DICT_ICON_DEFAULT = {"VERMELHA"="assets/itau_vermelho.png", "AMARELA"="assets/itau_amarelo.png", "VERDE"="assets/itau_verde.png"}
 
 [development]

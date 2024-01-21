@@ -10,13 +10,14 @@ import streamlit as st
 import streamlit.components.v1 as components
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
-from dynaconf import settings
 from loguru import logger
 
 try:
     from utils.generic_functions import calculate_time_usage, convert_to_number
+    from config_app.config_app import settings
 except ModuleNotFoundError:
     from src.utils.generic_functions import calculate_time_usage, convert_to_number
+    from src.config_app.config_app import settings
 
 dir_root = Path(__file__).absolute().parent.parent.parent
 
@@ -497,7 +498,7 @@ def convert_df_htmlx(
 
     return html
 
-def get_icon(dict_icons=None, status=None):
+def get_icon(dict_icons=None, status=None, return_default=False):
     """
 
     FUNÇÃO PARA OBTER O ICON QUE SERÁ MARCADO NO MAPA
@@ -517,30 +518,42 @@ def get_icon(dict_icons=None, status=None):
 
     """
 
+    dict_icons = {"VERMELHA": "assets/itau_vermelho.png",
+                  "AMARELA": "assets/itau_amarelo.png",
+                  "VERDE": "assets/itau_verde.png"}
+
     try:
         # INICIALIZANDO O ICON DEFAULT
         icon_default = str(
-            Path(dir_root, settings.get("MAP_ICON_DEFALT", "assets/itau.logo"))
+            Path(dir_root, settings.get("MAP_ICON_DEFAULT", "assets/itau.logo"))
         )
 
         # VERIFICANDO SE O ICON DEFAULT EXISTE
         if not path.exists(icon_default):
             return folium.Icon("ok-sign")
 
+        if return_default:
+
+            current_icon = folium.features.CustomIcon(
+                icon_image=icon_default, icon_size=(16, 16)
+            )
+
+            return current_icon
+
         if dict_icons:
             # VERIFICANDO SE O STATUS CONSTA NO DICT DE ICONS
-            if str(status) in dict_icons() and path.exists(dict_icons.get(str(status))):
+            if str(status) in dict_icons and path.exists(dict_icons[str(status)]):
                 current_icon = folium.features.CustomIcon(
                     icon_image=dict_icons.get(str(status), icon_size=(16, 16))
                 )
 
                 return current_icon
 
-        if str(status).upper() in settings.get("MAP_DICT_ICON_DEFAULT", {}):
+        if str(status).upper() in dict_icons:
             current_icon = folium.features.CustomIcon(
                 icon_image=str(
                     Path(
-                        dir_root, settings.get("MAP_DICT_ICON_DEFAULT").get(str(status))
+                        dir_root, dict_icons.get(str(status))
                     )
                 ),
                 icon_size=(16, 16),
@@ -760,6 +773,17 @@ def load_map(
         footprint_map = add_markers(
             mapobj=footprint_map, data=data, circle_radius=circle_radius
         )
+
+        # ADICIONANDO O EXPANDIR
+        folium.plugins.Fullscreen(
+            position="topright",
+            title="Expand me",
+            title_cancel="Exit me",
+            force_separate_button=True,
+        ).add_to(footprint_map)
+
+        # ADICIONANDO O GEOCODER
+        folium.plugins.Geocoder().add_to(footprint_map)
 
         if save_figure:
             footprint_map.save(map_save_name)

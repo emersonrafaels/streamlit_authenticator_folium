@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from loguru import logger
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 
 
@@ -135,14 +136,13 @@ def convert_dataframe_to_aggrid(data, validator_all_rows_selected=True):
 
 
 def compare_dataframes(df1, df2):
-    # FILTRANDO NULOS EM AMBOS DATAFRAMES
-    df1_fill = df1.fillna("")
-    df2_fill = df2.fillna("")
 
-    df1_fill.to_excel("SELECTED_DF.xlsx", index=None)
+    validator_diff_dataframes = df1.equals(df2)
 
-    df2_fill.to_excel("CURRENT_DF.xlsx", index=None)
+    try:
+        if not validator_diff_dataframes:
+            result = df1.compare(df2)
+    except Exception as ex:
+        logger.error(ex)
 
-    print(df1_fill.equals(df2_fill))
-
-    return df1_fill.equals(df2_fill)
+    return validator_diff_dataframes
